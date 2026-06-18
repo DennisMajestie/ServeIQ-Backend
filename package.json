@@ -1,0 +1,22 @@
+{
+  "name": "serveiq",
+  "version": "1.0.0",
+  "description": "ServeIQ — Hospitality Operations Platform",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "libs/*"
+  ],
+  "scripts": {
+    "start:api": "npm run start:dev -w apps/api",
+    "start:admin": "npm run start -w apps/admin",
+    "start:waiter": "npm run start -w apps/waiter",
+    "lint": "npm run lint -w apps/api && npm run lint -w apps/admin && npm run lint -w apps/waiter",
+    "format": "prettier --write \"apps/**/*.{ts,html,scss,md}\""
+  },
+  "devDependencies": {
+    "@types/multer": "^2.1.0",
+    "husky": "^8.0.0",
+    "prettier": "^3.0.0"
+  }
+}

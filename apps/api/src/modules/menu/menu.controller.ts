@@ -1,0 +1,59 @@
+import { Controller, Get, Post, Body, Param, Put, UseGuards, Request } from '@nestjs/common';
+import { MenuService } from './menu.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { CreateMenuItemDto } from './dto/create-menu-item.dto';
+import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
+
+@ApiTags('Menu')
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard)
+@Controller('menu')
+export class MenuController {
+  constructor(private readonly menuService: MenuService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Get all available menu items for the branch' })
+  @ApiResponse({ status: 200, description: 'List of menu items.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async findAll(@Request() req: any) {
+    return this.menuService.findAllByBranch(req.user.branchId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a menu item by ID' })
+  @ApiParam({ name: 'id', description: 'Menu item UUID' })
+  @ApiResponse({ status: 200, description: 'Menu item details.' })
+  @ApiResponse({ status: 404, description: 'Menu item not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    return this.menuService.findOne(id, req.user.branchId);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new menu item' })
+  @ApiResponse({ status: 201, description: 'Menu item created.' })
+  @ApiResponse({ status: 400, description: 'Validation error.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async create(@Request() req: any, @Body() createDto: CreateMenuItemDto) {
+    return this.menuService.create({
+      ...createDto,
+      branch_id: req.user.branchId,
+      created_by: req.user.userId,
+    });
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update a menu item' })
+  @ApiParam({ name: 'id', description: 'Menu item UUID' })
+  @ApiResponse({ status: 200, description: 'Menu item updated.' })
+  @ApiResponse({ status: 404, description: 'Menu item not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async update(
+    @Param('id') id: string,
+    @Request() req: any,
+    @Body() updateDto: UpdateMenuItemDto,
+  ) {
+    return this.menuService.update(id, req.user.branchId, updateDto);
+  }
+}
