@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Tab } from './entities/tab.entity';
@@ -17,6 +17,7 @@ export class TabService {
     private userRepository: Repository<User>,
     @InjectRepository(Order)
     private orderRepository: Repository<Order>,
+    @Inject(DataSource)
     private dataSource: DataSource,
   ) {}
 
