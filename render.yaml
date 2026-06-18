@@ -3,9 +3,8 @@ services:
     name: serveiq-api
     env: node
     plan: free
-    rootDir: apps/api
-    buildCommand: npm install && npm run build
-    startCommand: npm run start:prod
+    buildCommand: cd apps/api && npm install && npm run build
+    startCommand: cd apps/api && npm run start:prod
     envVars:
       - key: NODE_ENV
         value: production
