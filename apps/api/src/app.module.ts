@@ -28,7 +28,8 @@ import { UploadModule } from './modules/upload/upload.module';
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: process.env.NODE_ENV === 'production' ? undefined : '.env',
+      ignoreEnvFile: process.env.NODE_ENV === 'production',
     }),
     TypeOrmModule.forRoot({
       type: 'postgres',
@@ -46,6 +47,9 @@ import { UploadModule } from './modules/upload/upload.module';
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
+      retryAttempts: 10,
+      retryDelay: 3000,
+      autoLoadEntities: true,
     }),
     AuthModule,
     BusinessModule,
