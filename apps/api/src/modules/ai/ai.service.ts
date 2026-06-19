@@ -5,19 +5,27 @@ import OpenAI from 'openai';
 @Injectable()
 export class AiService {
   private readonly logger = new Logger(AiService.name);
-  private openai: OpenAI;
+  private openai: OpenAI | null = null;
 
   constructor(private configService: ConfigService) {
     const apiKey = this.configService.get<string>('NEMOTRON_API_KEY');
     const baseURL = this.configService.get<string>('NEMOTRON_BASE_URL');
 
-    this.openai = new OpenAI({
-      apiKey,
-      baseURL,
-    });
+    if (apiKey) {
+      this.openai = new OpenAI({
+        apiKey,
+        baseURL,
+      });
+    } else {
+      this.logger.warn('NEMOTRON_API_KEY not set, AI features disabled');
+    }
   }
 
   async generateLogic(prompt: string): Promise<string> {
+    if (!this.openai) {
+      throw new Error('AI service unavailable: NEMOTRON_API_KEY not configured');
+    }
+
     this.logger.log('Generating logic with Nemotron');
 
     const systemPrompt = `You are an expert business logic generator for a hospitality POS system called ServeIQ.
@@ -43,6 +51,10 @@ Keep responses structured and professional.`;
   }
 
   async analyzeApiProsCons(): Promise<string> {
+    if (!this.openai) {
+      throw new Error('AI service unavailable: NEMOTRON_API_KEY not configured');
+    }
+
     this.logger.log('Analyzing API pros and cons with Nemotron');
 
     const systemPrompt = `You are an expert API analyst. Analyze the ServeIQ hospitality POS API and provide:
