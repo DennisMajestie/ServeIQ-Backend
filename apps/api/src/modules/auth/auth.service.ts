@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException, Inject } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
@@ -14,7 +14,6 @@ import { UserRole } from '../../common/shared';
 export class AuthService {
   constructor(
     private jwtService: JwtService,
-    @Inject(DataSource)
     private dataSource: DataSource,
   ) {}
 

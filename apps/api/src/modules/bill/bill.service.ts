@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException, Inject } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Bill } from './entities/bill.entity';
@@ -31,7 +31,6 @@ export class BillService {
     private branchRepository: Repository<Branch>,
     @InjectRepository(Business)
     private businessRepository: Repository<Business>,
-    @Inject(DataSource)
     private dataSource: DataSource,
   ) {}
 
