@@ -4,15 +4,13 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  Version,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Upload')
-@Controller('upload')
+@Controller({ path: 'upload', version: '1' })
 export class UploadController {
-  @Version('1')
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
@@ -29,7 +27,7 @@ export class UploadController {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
-    const url = `/uploads/${file.filename}`;
+    const url = `/uploads/${file.originalname}`;
     return { url };
   }
 }
