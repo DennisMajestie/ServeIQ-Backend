@@ -4,18 +4,16 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  UseGuards,
+  Version,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiConsumes, ApiBody, ApiBearerAuth } from '@nestjs/swagger';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
 
 @ApiTags('Upload')
 @Controller('upload')
 export class UploadController {
+  @Version('1')
   @Post()
-  @UseGuards(JwtAuthGuard)
-  @ApiBearerAuth('access-token')
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Upload a file (image or PDF). Returns the file URL to use in other endpoints.' })
