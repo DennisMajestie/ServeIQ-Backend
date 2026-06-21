@@ -3,6 +3,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User } from './entities/user.entity';
+import { Branch } from '../branch/entities/branch.entity';
 import { UserRole } from '../../common/shared';
 import { CreateWaiterDto } from './dto/create-waiter.dto';
 
@@ -11,6 +12,8 @@ export class UserService {
   constructor(
     @InjectRepository(User)
     private userRepository: Repository<User>,
+    @InjectRepository(Branch)
+    private branchRepository: Repository<Branch>,
   ) {}
 
   async create(createDto: any) {
@@ -19,55 +22,70 @@ export class UserService {
   }
 
   async createWaiter(dto: CreateWaiterDto, businessId: string): Promise<{ waiter: Partial<User>; pin: string }> {
-    // Generate a unique 4-digit PIN for this business
-    let pin = '';
-    let pinIsUnique = false;
-
-    while (!pinIsUnique) {
-      pin = String(Math.floor(1000 + Math.random() * 9000));
-      const existing = await this.userRepository.find({
-        where: { business_id: businessId, role: UserRole.WAITER, is_active: true },
+    try {
+      // 1. Validate branch exists and belongs to this business
+      const branch = await this.branchRepository.findOne({
+        where: { id: dto.branchId, business_id: businessId },
       });
-      const pinTaken = await Promise.all(
-        existing.map((w) => (w.pin_hash ? bcrypt.compare(pin, w.pin_hash) : Promise.resolve(false))),
-      );
-      pinIsUnique = !pinTaken.some(Boolean);
+      if (!branch) {
+        throw new NotFoundException(`Branch not found or does not belong to your business`);
+      }
+
+      // 2. Generate a unique 4-digit PIN for this business
+      let pin = '';
+      let pinIsUnique = false;
+      let attempts = 0;
+
+      while (!pinIsUnique && attempts < 10) {
+        attempts++;
+        pin = String(Math.floor(1000 + Math.random() * 9000));
+        const existing = await this.userRepository.find({
+          where: { business_id: businessId, role: UserRole.WAITER, is_active: true },
+        });
+        const pinTaken = await Promise.all(
+          existing.map((w) => (w.pin_hash ? bcrypt.compare(pin, w.pin_hash) : Promise.resolve(false))),
+        );
+        pinIsUnique = !pinTaken.some(Boolean);
+      }
+
+      const salt = await bcrypt.genSalt();
+      const pinHash = await bcrypt.hash(pin, salt);
+
+      // Waiters don't always have email — generate a placeholder if not supplied
+      const email = dto.email ?? `waiter-${Date.now()}-${Math.floor(Math.random() * 1000)}@internal.serveiq`;
+
+      // Generate a random secure password (waiter logs in via PIN, not password)
+      const randomPassword = await bcrypt.hash(Math.random().toString(36), salt);
+
+      const user = this.userRepository.create({
+        business_id: businessId,
+        branch_id: dto.branchId,
+        full_name: dto.fullName,
+        email,
+        phone: dto.phone,
+        password_hash: randomPassword,
+        pin_hash: pinHash,
+        role: UserRole.WAITER,
+        is_active: true,
+      });
+
+      const savedUser = await this.userRepository.save(user);
+
+      return {
+        waiter: {
+          id: savedUser.id,
+          full_name: savedUser.full_name,
+          email: savedUser.email,
+          phone: savedUser.phone,
+          role: savedUser.role,
+          branch_id: savedUser.branch_id,
+        },
+        pin, // Plain PIN — shown once to admin
+      };
+    } catch (err) {
+      console.error('[UserService] Error creating waiter:', err);
+      throw err;
     }
-
-    const salt = await bcrypt.genSalt();
-    const pinHash = await bcrypt.hash(pin, salt);
-
-    // Waiters don't always have email — generate a placeholder if not supplied
-    const email = dto.email ?? `waiter-${Date.now()}@internal.serveiq`;
-
-    // Generate a random secure password (waiter logs in via PIN, not password)
-    const randomPassword = await bcrypt.hash(Math.random().toString(36), salt);
-
-    const user = this.userRepository.create({
-      business_id: businessId,
-      branch_id: dto.branchId,
-      full_name: dto.fullName,
-      email,
-      phone: dto.phone,
-      password_hash: randomPassword,
-      pin_hash: pinHash,
-      role: UserRole.WAITER,
-      is_active: true,
-    });
-
-    const savedUser = await this.userRepository.save(user);
-
-    return {
-      waiter: {
-        id: savedUser.id,
-        full_name: savedUser.full_name,
-        email: savedUser.email,
-        phone: savedUser.phone,
-        role: savedUser.role,
-        branch_id: savedUser.branch_id,
-      },
-      pin, // Plain PIN — shown once to admin
-    };
   }
 
   async findAllWaiters(branchId: string) {
