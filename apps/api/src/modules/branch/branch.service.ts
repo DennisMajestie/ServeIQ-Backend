@@ -83,7 +83,7 @@ export class BranchService {
       const todayBills = await this.billRepository
         .createQueryBuilder('bill')
         .innerJoin('tabs', 'tab', 'tab.id = bill.tab_id')
-        .where('tab.branch_id = :branchId', { branchId })
+        .where('tab.branch_id = :branchId::uuid', { branchId })
         .andWhere('bill.paid_at >= :today', { today })
         .andWhere('bill.paid_at < :tomorrow', { tomorrow })
         .getMany();

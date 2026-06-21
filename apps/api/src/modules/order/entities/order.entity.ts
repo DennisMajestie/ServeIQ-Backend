@@ -13,11 +13,11 @@ export class Order {
   id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   tab_id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   menu_item_id: string;
 
   @Column({ type: 'integer' })

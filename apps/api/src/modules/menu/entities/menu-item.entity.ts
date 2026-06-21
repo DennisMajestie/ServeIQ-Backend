@@ -14,7 +14,7 @@ export class MenuItem {
   id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   branch_id: string;
 
   @Column()

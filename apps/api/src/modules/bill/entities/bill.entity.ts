@@ -13,7 +13,7 @@ export class Bill {
   id: string;
 
   @Index({ unique: true })
-  @Column()
+  @Column({ type: 'uuid' })
   tab_id: string;
 
   @Column({ type: 'integer' })

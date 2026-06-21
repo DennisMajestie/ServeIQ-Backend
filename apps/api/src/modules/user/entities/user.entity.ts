@@ -19,7 +19,7 @@ export class User {
   id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   business_id: string;
 
   @ManyToOne(() => Business)
@@ -27,7 +27,7 @@ export class User {
   business: Business;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   branch_id: string;
 
   @ManyToOne(() => Branch)

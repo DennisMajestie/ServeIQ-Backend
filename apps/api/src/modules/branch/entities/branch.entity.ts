@@ -17,7 +17,7 @@ export class Branch {
   id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   business_id: string;
 
   @ManyToOne(() => Business, (business) => business.branches)

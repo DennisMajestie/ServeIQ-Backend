@@ -13,15 +13,15 @@ export class Tab {
   id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   branch_id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   table_id: string;
 
   @Index()
-  @Column()
+  @Column({ type: 'uuid' })
   waiter_id: string;
 
   @Column({ nullable: true })
