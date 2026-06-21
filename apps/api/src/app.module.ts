@@ -44,7 +44,7 @@ import { UploadModule } from './modules/upload/upload.module';
         Order,
         Bill,
       ],
-      synchronize: true,
+      synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
       ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false,
       retryAttempts: 10,
