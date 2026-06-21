@@ -16,9 +16,9 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        secret: configService.get('JWT_SECRET'),
+        secret: configService.get('JWT_SECRET') || 'serveiq-secret-2024',
         signOptions: {
-          expiresIn: configService.get('JWT_EXPIRES_IN', '15m'),
+          expiresIn: configService.get('JWT_EXPIRES_IN', '24h'),
         },
       }),
     }),
