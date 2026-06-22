@@ -66,8 +66,10 @@ export class UserService {
       const salt = await bcrypt.genSalt();
       const pinHash = await bcrypt.hash(pin, salt);
 
-      // Waiters don't always have email — generate a placeholder if not supplied
-      const email = dto.email ?? `waiter-${Date.now()}-${Math.floor(Math.random() * 1000)}@internal.serveiq`;
+      // Waiters don't always have email — generate a placeholder if not supplied or empty
+      const email = (dto.email && dto.email.trim() !== '') 
+        ? dto.email 
+        : `waiter-${Date.now()}-${Math.floor(Math.random() * 1000)}@internal.serveiq`;
 
       // Generate a random secure password (waiter logs in via PIN, not password)
       const randomPassword = await bcrypt.hash(Math.random().toString(36), salt);
