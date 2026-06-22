@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException, ConflictException, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -24,20 +24,19 @@ export class UserService {
   async createWaiter(dto: CreateWaiterDto, businessId: string): Promise<{ waiter: Partial<User>; pin: string }> {
     if (!businessId) {
       console.error('[UserService] businessId missing from request context');
-      throw new Error('Business ID is required for staff creation');
+      throw new UnauthorizedException('Business ID is missing. Please re-login.');
     }
 
     try {
       // 1. Validate branch exists and belongs to this business
-      console.log(`[UserService] Creating waiter for branch: ${dto.branchId}, business: ${businessId}`);
+      console.log(`[UserService] DEBUG: Creating waiter. Branch: ${dto.branchId}, Business: ${businessId}`);
       
-      // Basic UUID format check to avoid PostgreSQL crash
       const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (!uuidRegex.test(dto.branchId)) {
-        throw new Error(`Invalid branch ID format: ${dto.branchId}`);
+        throw new BadRequestException(`Invalid branch ID format: ${dto.branchId}`);
       }
       if (!uuidRegex.test(businessId)) {
-        throw new Error(`Invalid business ID format: ${businessId}`);
+        throw new BadRequestException(`Invalid business ID format: ${businessId}`);
       }
 
       const branch = await this.branchRepository.findOne({
@@ -100,11 +99,19 @@ export class UserService {
       };
     } catch (err) {
       console.error('[UserService] Error creating waiter:', err);
+      
+      // If it's already a Nest exception, just re-throw it
+      if (err instanceof NotFoundException || err instanceof BadRequestException || err instanceof UnauthorizedException || err instanceof ConflictException) {
+        throw err;
+      }
+
       // Handle potential duplicate email or other DB constraints
       if (err.code === '23505') {
-        throw new Error('A staff member with this email or identity already exists.');
+        throw new ConflictException('A staff member with this email or identity already exists.');
       }
-      throw err;
+      
+      // For any other DB error, wrap it in a BadRequestException or re-throw
+      throw new BadRequestException(`Failed to create waiter: ${err.message || 'Unknown database error'}`);
     }
   }
 
