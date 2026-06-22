@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
+import { MenuItem } from './entities/menu-item.entity';
 
 @ApiTags('Menu')
 @ApiBearerAuth('access-token')
@@ -14,7 +15,7 @@ export class MenuController {
 
   @Get()
   @ApiOperation({ summary: 'Get all available menu items for the branch' })
-  @ApiResponse({ status: 200, description: 'List of menu items.' })
+  @ApiResponse({ status: 200, description: 'List of menu items.', type: [MenuItem] })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findAll(@Request() req: any) {
     return this.menuService.findAllByBranch(req.user.branchId);
@@ -23,7 +24,7 @@ export class MenuController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a menu item by ID' })
   @ApiParam({ name: 'id', description: 'Menu item UUID' })
-  @ApiResponse({ status: 200, description: 'Menu item details.' })
+  @ApiResponse({ status: 200, description: 'Menu item details.', type: MenuItem })
   @ApiResponse({ status: 404, description: 'Menu item not found.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findOne(@Param('id') id: string, @Request() req: any) {
@@ -32,7 +33,7 @@ export class MenuController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new menu item' })
-  @ApiResponse({ status: 201, description: 'Menu item created.' })
+  @ApiResponse({ status: 201, description: 'Menu item created.', type: MenuItem })
   @ApiResponse({ status: 400, description: 'Validation error.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async create(@Request() req: any, @Body() createDto: CreateMenuItemDto) {

@@ -12,6 +12,8 @@ import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserService } from './user.service';
 import { CreateWaiterDto } from './dto/create-waiter.dto';
+import { User } from './entities/user.entity';
+import { ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('User')
 @Controller('user')
@@ -22,6 +24,8 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'Create a new waiter' })
+  @ApiResponse({ status: 201, description: 'Waiter created.' })
+  @ApiResponse({ status: 400, description: 'Validation error.' })
   async createWaiter(
     @Request() req: { user: { businessId: string } },
     @Body() dto: CreateWaiterDto,
@@ -33,6 +37,7 @@ export class UserController {
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'List all waiters in the branch' })
+  @ApiResponse({ status: 200, description: 'List of waiters.', type: [User] })
   async getWaiters(@Request() req: { user: { branchId: string } }) {
     return this.userService.findAllWaiters(req.user.branchId);
   }

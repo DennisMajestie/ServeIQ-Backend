@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { CreateOrderItemDto } from './dto/create-order-item.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
+import { Order } from './entities/order.entity';
 
 @ApiTags('Orders')
 @ApiBearerAuth('access-token')
@@ -16,7 +17,7 @@ export class OrderController {
   @ApiOperation({ summary: 'Add order items to an open tab' })
   @ApiParam({ name: 'tabId', description: 'Tab UUID', example: 'tab-uuid-here' })
   @ApiBody({ type: [CreateOrderItemDto] })
-  @ApiResponse({ status: 201, description: 'Order items added to tab.' })
+  @ApiResponse({ status: 201, description: 'Order items added to tab.', type: [Order] })
   @ApiResponse({ status: 400, description: 'Validation error.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async addItems(@Param('tabId') tabId: string, @Request() req: any, @Body() items: CreateOrderItemDto[]) {
@@ -26,7 +27,7 @@ export class OrderController {
   @Get('tab/:tabId')
   @ApiOperation({ summary: 'Get all orders for a specific tab' })
   @ApiParam({ name: 'tabId', description: 'Tab UUID', example: 'tab-uuid-here' })
-  @ApiResponse({ status: 200, description: 'List of order items for the tab.' })
+  @ApiResponse({ status: 200, description: 'List of order items for the tab.', type: [Order] })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findByTab(@Param('tabId') tabId: string) {
     return this.orderService.findByTab(tabId);

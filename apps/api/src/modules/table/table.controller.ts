@@ -5,6 +5,7 @@ import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@ne
 import { CreateTableDto } from './dto/create-table.dto';
 import { UpdateTableDto } from './dto/update-table.dto';
 import { UpdateTableStatusDto } from './dto/update-table-status.dto';
+import { Table } from './entities/table.entity';
 
 @ApiTags('Tables')
 @ApiBearerAuth('access-token')
@@ -15,7 +16,7 @@ export class TableController {
 
   @Get()
   @ApiOperation({ summary: 'Get all tables for the branch' })
-  @ApiResponse({ status: 200, description: 'List of tables with statuses.' })
+  @ApiResponse({ status: 200, description: 'List of tables with statuses.', type: [Table] })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findAll(@Request() req: any) {
     return this.tableService.findAllByBranch(req.user.branchId);
@@ -24,7 +25,7 @@ export class TableController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a table by ID' })
   @ApiParam({ name: 'id', description: 'Table UUID' })
-  @ApiResponse({ status: 200, description: 'Table details.' })
+  @ApiResponse({ status: 200, description: 'Table details.', type: Table })
   @ApiResponse({ status: 404, description: 'Table not found.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findOne(@Param('id') id: string, @Request() req: any) {
@@ -33,7 +34,7 @@ export class TableController {
 
   @Post()
   @ApiOperation({ summary: 'Create a new table' })
-  @ApiResponse({ status: 201, description: 'Table created.' })
+  @ApiResponse({ status: 201, description: 'Table created.', type: Table })
   @ApiResponse({ status: 400, description: 'Validation error.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async create(@Request() req: any, @Body() createDto: CreateTableDto) {

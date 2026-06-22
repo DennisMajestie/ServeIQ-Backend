@@ -3,6 +3,7 @@ import { TabService } from './tab.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 import { OpenTabDto } from './dto/open-tab.dto';
+import { Tab } from './entities/tab.entity';
 
 @ApiTags('Tabs')
 @ApiBearerAuth('access-token')
@@ -14,7 +15,7 @@ export class TabController {
   @Get()
   @ApiOperation({ summary: 'Get all tabs for the branch (optionally filtered by status)' })
   @ApiQuery({ name: 'status', required: false, enum: ['open', 'billed', 'paid', 'voided'] })
-  @ApiResponse({ status: 200, description: 'List of tabs with details.' })
+  @ApiResponse({ status: 200, description: 'List of tabs with details.', type: [Tab] })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findAll(@Request() req: any, @Query('status') status?: string) {
     return this.tabService.findAllByBranch(req.user.branchId, status);
@@ -22,7 +23,7 @@ export class TabController {
 
   @Post('open')
   @ApiOperation({ summary: 'Open a new tab at a table' })
-  @ApiResponse({ status: 201, description: 'Tab opened successfully.' })
+  @ApiResponse({ status: 201, description: 'Tab opened successfully.', type: Tab })
   @ApiResponse({ status: 400, description: 'Validation error.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async openTab(@Request() req: any, @Body() createDto: OpenTabDto) {
@@ -36,7 +37,7 @@ export class TabController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a tab by ID (includes its orders)' })
   @ApiParam({ name: 'id', description: 'Tab UUID', example: 'tab-uuid-here' })
-  @ApiResponse({ status: 200, description: 'Tab record with order items.' })
+  @ApiResponse({ status: 200, description: 'Tab record with order items.', type: Tab })
   @ApiResponse({ status: 404, description: 'Tab not found.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findOne(@Param('id') id: string, @Request() req: any) {

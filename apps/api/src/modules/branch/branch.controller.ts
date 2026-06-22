@@ -4,6 +4,8 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
 import { CreateBranchDto } from './dto/create-branch.dto';
 import { UpdateBranchDto } from './dto/update-branch.dto';
+import { DashboardStatsDto } from './dto/dashboard-stats.dto';
+import { Branch } from './entities/branch.entity';
 
 @ApiTags('Branches')
 @ApiBearerAuth('access-token')
@@ -14,7 +16,7 @@ export class BranchController {
 
   @Get()
   @ApiOperation({ summary: 'List all branches for the authenticated business' })
-  @ApiResponse({ status: 200, description: 'Array of branch records.' })
+  @ApiResponse({ status: 200, description: 'Array of branch records.', type: [Branch] })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findAll(@Request() req: any) {
     return this.branchService.findAllByBusiness(req.user.businessId);
@@ -23,7 +25,7 @@ export class BranchController {
   @Get(':id')
   @ApiOperation({ summary: 'Get a single branch by ID' })
   @ApiParam({ name: 'id', description: 'Branch UUID', example: 'a1b2c3d4-...' })
-  @ApiResponse({ status: 200, description: 'Branch record.' })
+  @ApiResponse({ status: 200, description: 'Branch record.', type: Branch })
   @ApiResponse({ status: 404, description: 'Branch not found.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async findOne(@Param('id') id: string, @Request() req: any) {
@@ -32,7 +34,7 @@ export class BranchController {
 
   @Get('dashboard/stats')
   @ApiOperation({ summary: 'Get dashboard stats for the authenticated branch' })
-  @ApiResponse({ status: 200, description: 'Dashboard statistics.' })
+  @ApiResponse({ status: 200, description: 'Dashboard statistics.', type: DashboardStatsDto })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async getDashboardStats(@Request() req: any) {
     return this.branchService.getDashboardStats(req.user.branchId);
