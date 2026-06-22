@@ -160,4 +160,12 @@ export class UserService {
     Object.assign(user, updateDto);
     return this.userRepository.save(user);
   }
+
+  async removeWaiter(id: string, businessId: string) {
+    const waiter = await this.userRepository.findOne({
+      where: { id, business_id: businessId, role: UserRole.WAITER },
+    });
+    if (!waiter) throw new NotFoundException('Waiter not found or does not belong to your business');
+    return this.userRepository.remove(waiter);
+  }
 }

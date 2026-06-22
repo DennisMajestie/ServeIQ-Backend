@@ -7,6 +7,7 @@ import {
   Body,
   UseGuards,
   Request,
+  Delete,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
@@ -51,5 +52,17 @@ export class UserController {
     @Param('id') id: string,
   ) {
     return this.userService.resetWaiterPin(id, req.user.businessId);
+  }
+  
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Delete a waiter' })
+  @ApiResponse({ status: 200, description: 'Waiter deleted.' })
+  async deleteWaiter(
+    @Request() req: { user: { businessId: string } },
+    @Param('id') id: string,
+  ) {
+    return this.userService.removeWaiter(id, req.user.businessId);
   }
 }
