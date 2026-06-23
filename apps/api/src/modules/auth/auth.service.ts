@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
@@ -89,13 +89,21 @@ export class AuthService {
   }
 
   async waiterLogin(dto: WaiterLoginDto) {
-    // Find all active waiters for this branch
+    if (!dto.pin) {
+      throw new BadRequestException('PIN or passcode is required');
+    }
+
+    const whereClause: any = {
+      role: UserRole.WAITER,
+      is_active: true,
+    };
+
+    if (dto.branchId && dto.branchId.length === 36) {
+      whereClause.branch_id = dto.branchId;
+    }
+
     const waiters = await this.dataSource.getRepository(User).find({
-      where: {
-        branch_id: dto.branchId,
-        role: UserRole.WAITER,
-        is_active: true,
-      },
+      where: whereClause,
     });
 
     for (const waiter of waiters) {
