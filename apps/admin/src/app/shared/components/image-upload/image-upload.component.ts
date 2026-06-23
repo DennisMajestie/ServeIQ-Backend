@@ -121,7 +121,7 @@ export class ImageUploadComponent {
     const formData = new FormData();
     formData.append('file', file);
 
-    this.http.post<{url: string}>('/api/upload', formData).subscribe({
+    this.http.post<{url: string}>('/api/v1/upload', formData).subscribe({
       next: (res) => {
         this.isUploading = false;
         this.imageUploaded.emit(res.url);

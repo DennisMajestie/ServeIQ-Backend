@@ -105,7 +105,7 @@ export class WaiterManagementComponent implements OnInit {
   }
 
   loadWaiters() {
-    this.http.get<any[]>('/api/user/waiters').subscribe(data => this.waiters = data);
+    this.http.get<any[]>('/api/v1/user/waiters').subscribe(data => this.waiters = data);
   }
 
   openAddModal() {
@@ -130,8 +130,8 @@ export class WaiterManagementComponent implements OnInit {
 
   saveWaiter() {
     const request = this.isEditing 
-      ? this.http.patch(`/api/user/${this.currentWaiter.id}`, this.currentWaiter)
-      : this.http.post('/api/user/invite-waiter', this.currentWaiter);
+      ? this.http.patch(`/api/v1/user/${this.currentWaiter.id}`, this.currentWaiter)
+      : this.http.post('/api/v1/user/invite-waiter', this.currentWaiter);
 
     request.subscribe(() => {
       this.loadWaiters();
@@ -141,7 +141,7 @@ export class WaiterManagementComponent implements OnInit {
 
   deleteWaiter(id: string) {
     if (confirm('Are you sure?')) {
-      this.http.delete(`/api/user/${id}`).subscribe(() => this.loadWaiters());
+      this.http.delete(`/api/v1/user/${id}`).subscribe(() => this.loadWaiters());
     }
   }
 

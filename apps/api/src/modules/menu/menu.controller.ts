@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Request } from '@nestjs/common';
 import { MenuService } from './menu.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
@@ -44,7 +44,7 @@ export class MenuController {
     });
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a menu item' })
   @ApiParam({ name: 'id', description: 'Menu item UUID' })
   @ApiResponse({ status: 200, description: 'Menu item updated.' })
@@ -56,5 +56,14 @@ export class MenuController {
     @Body() updateDto: UpdateMenuItemDto,
   ) {
     return this.menuService.update(id, req.user.branchId, updateDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a menu item' })
+  @ApiParam({ name: 'id', description: 'Menu item UUID' })
+  @ApiResponse({ status: 200, description: 'Menu item deleted.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async remove(@Param('id') id: string, @Request() req: any) {
+    return this.menuService.remove(id, req.user.branchId);
   }
 }

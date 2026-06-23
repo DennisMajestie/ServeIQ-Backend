@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, Put, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Request } from '@nestjs/common';
 import { TableService } from './table.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
@@ -44,7 +44,7 @@ export class TableController {
     });
   }
 
-  @Put(':id')
+  @Patch(':id')
   @ApiOperation({ summary: 'Update a table' })
   @ApiParam({ name: 'id', description: 'Table UUID' })
   @ApiResponse({ status: 200, description: 'Table updated.' })
@@ -58,7 +58,7 @@ export class TableController {
     return this.tableService.update(id, req.user.branchId, updateDto);
   }
 
-  @Put(':id/status')
+  @Patch(':id/status')
   @ApiOperation({ summary: 'Update table status (available/occupied/reserved)' })
   @ApiParam({ name: 'id', description: 'Table UUID' })
   @ApiResponse({ status: 200, description: 'Table status updated.' })
@@ -70,5 +70,15 @@ export class TableController {
     @Body() statusDto: UpdateTableStatusDto,
   ) {
     return this.tableService.updateStatus(id, req.user.branchId, statusDto.status);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a table' })
+  @ApiParam({ name: 'id', description: 'Table UUID' })
+  @ApiResponse({ status: 200, description: 'Table deleted.' })
+  @ApiResponse({ status: 404, description: 'Table not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async remove(@Param('id') id: string, @Request() req: any) {
+    return this.tableService.remove(id, req.user.branchId);
   }
 }

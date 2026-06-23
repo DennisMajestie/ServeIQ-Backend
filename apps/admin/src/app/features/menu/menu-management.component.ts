@@ -108,7 +108,7 @@ export class MenuManagementComponent implements OnInit {
   }
 
   loadMenuItems() {
-    this.http.get<any[]>('/api/menu').subscribe(data => this.menuItems = data);
+    this.http.get<any[]>('/api/v1/menu').subscribe(data => this.menuItems = data);
   }
 
   openAddModal() {
@@ -133,8 +133,8 @@ export class MenuManagementComponent implements OnInit {
 
   saveItem() {
     const request = this.isEditing 
-      ? this.http.patch(`/api/menu/${this.currentItem.id}`, this.currentItem)
-      : this.http.post('/api/menu', this.currentItem);
+      ? this.http.patch(`/api/v1/menu/${this.currentItem.id}`, this.currentItem)
+      : this.http.post('/api/v1/menu', this.currentItem);
 
     request.subscribe(() => {
       this.loadMenuItems();
@@ -144,7 +144,7 @@ export class MenuManagementComponent implements OnInit {
 
   deleteItem(id: string) {
     if (confirm('Are you sure?')) {
-      this.http.delete(`/api/menu/${id}`).subscribe(() => this.loadMenuItems());
+      this.http.delete(`/api/v1/menu/${id}`).subscribe(() => this.loadMenuItems());
     }
   }
 

@@ -8,6 +8,12 @@ import {
   Index,
 } from 'typeorm';
 
+export enum TableStatus {
+  AVAILABLE = 'available',
+  OCCUPIED = 'occupied',
+  RESERVED = 'reserved',
+}
+
 @Entity('tables')
 @Index(['branch_id', 'table_number'], { unique: true })
 export class Table {
@@ -29,10 +35,10 @@ export class Table {
 
   @Column({
     type: 'enum',
-    enum: ['available', 'occupied', 'reserved'],
-    default: 'available',
+    enum: TableStatus,
+    default: TableStatus.AVAILABLE,
   })
-  status: string;
+  status: TableStatus;
 
   @CreateDateColumn()
   created_at: Date;

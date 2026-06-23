@@ -1,6 +1,6 @@
-
-import { IsNotEmpty, IsString, IsNumber, IsOptional, Min } from 'class-validator';
-import { ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsString, IsNumber, IsOptional, Min, IsEnum } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional, PartialType } from '@nestjs/swagger';
+import { TableStatus } from '../entities/table.entity';
 
 export class CreateTableDto {
   @ApiProperty({ example: 'T1' })
@@ -18,4 +18,21 @@ export class CreateTableDto {
   @Min(1)
   @IsOptional()
   capacity?: number;
+
+  @ApiProperty({ enum: TableStatus, default: TableStatus.AVAILABLE })
+  @IsEnum(TableStatus)
+  @IsOptional()
+  status?: TableStatus;
+
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  branch_id?: string;
+}
+
+export class UpdateTableDto extends PartialType(CreateTableDto) {
+  @ApiPropertyOptional()
+  @IsString()
+  @IsOptional()
+  branch_id?: string;
 }

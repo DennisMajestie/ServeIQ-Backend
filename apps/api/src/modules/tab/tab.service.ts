@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Tab } from './entities/tab.entity';
-import { Table } from '../table/entities/table.entity';
+import { Table, TableStatus } from '../table/entities/table.entity';
 import { User } from '../user/entities/user.entity';
 import { Order } from '../order/entities/order.entity';
 
@@ -37,7 +37,7 @@ export class TabService {
 
       // 2. Update Table Status
       await queryRunner.manager.update(Table, savedTab.table_id, {
-        status: 'occupied',
+        status: TableStatus.OCCUPIED,
       });
 
       await queryRunner.commitTransaction();
@@ -96,8 +96,21 @@ export class TabService {
     tab.closed_at = new Date();
     
     // Also release table
-    await this.tableRepository.update(tab.table_id, { status: 'available' });
+    await this.tableRepository.update(tab.table_id, {
+      status: TableStatus.AVAILABLE,
+    });
     
     return this.tabRepository.save(tab);
+  }
+
+  async update(id: string, branchId: string, updateDto: any) {
+    const tab = await this.findOne(id, branchId);
+    Object.assign(tab, updateDto);
+    return this.tabRepository.save(tab);
+  }
+
+  async remove(id: string, branchId: string) {
+    const tab = await this.findOne(id, branchId);
+    return this.tabRepository.remove(tab);
   }
 }

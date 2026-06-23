@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Request } from '@nestjs/common';
 import { BranchService } from './branch.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
@@ -60,6 +60,16 @@ export class BranchController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async update(@Param('id') id: string, @Request() req: any, @Body() updateDto: UpdateBranchDto) {
     return this.branchService.update(id, req.user.businessId, updateDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a branch' })
+  @ApiParam({ name: 'id', description: 'Branch UUID' })
+  @ApiResponse({ status: 200, description: 'Branch deleted.' })
+  @ApiResponse({ status: 404, description: 'Branch not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async remove(@Param('id') id: string, @Request() req: any) {
+    return this.branchService.remove(id, req.user.businessId);
   }
 }
 

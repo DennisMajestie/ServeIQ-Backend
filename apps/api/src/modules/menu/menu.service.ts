@@ -36,4 +36,9 @@ export class MenuService {
     Object.assign(item, updateDto);
     return this.menuRepository.save(item);
   }
+
+  async remove(id: string, branchId: string) {
+    const item = await this.findOne(id, branchId);
+    return this.menuRepository.remove(item);
+  }
 }

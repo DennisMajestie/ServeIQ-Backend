@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { TabService } from './tab.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
@@ -52,6 +52,26 @@ export class TabController {
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async closeTab(@Param('id') id: string, @Request() req: any) {
     return this.tabService.closeTab(id, req.user.branchId);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a tab' })
+  @ApiParam({ name: 'id', description: 'Tab UUID' })
+  @ApiResponse({ status: 200, description: 'Tab updated.' })
+  @ApiResponse({ status: 404, description: 'Tab not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async update(@Param('id') id: string, @Request() req: any, @Body() updateDto: any) {
+    return this.tabService.update(id, req.user.branchId, updateDto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a tab' })
+  @ApiParam({ name: 'id', description: 'Tab UUID' })
+  @ApiResponse({ status: 200, description: 'Tab deleted.' })
+  @ApiResponse({ status: 404, description: 'Tab not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async remove(@Param('id') id: string, @Request() req: any) {
+    return this.tabService.remove(id, req.user.branchId);
   }
 }
 

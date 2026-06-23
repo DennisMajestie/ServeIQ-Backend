@@ -53,7 +53,21 @@ export class UserController {
   ) {
     return this.userService.resetWaiterPin(id, req.user.businessId);
   }
-  
+
+  @Patch(':id')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Update a user/waiter profile' })
+  @ApiResponse({ status: 200, description: 'User updated.' })
+  @ApiResponse({ status: 404, description: 'User not found.' })
+  async update(
+    @Request() req: { user: { branchId: string } },
+    @Param('id') id: string,
+    @Body() updateDto: any,
+  ) {
+    return this.userService.update(id, req.user.branchId, updateDto);
+  }
+
   @Delete(':id')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')

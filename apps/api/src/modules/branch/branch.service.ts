@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
 import { Branch } from './entities/branch.entity';
-import { Table } from '../table/entities/table.entity';
+import { Table, TableStatus } from '../table/entities/table.entity';
 import { Tab } from '../tab/entities/tab.entity';
 import { Bill } from '../bill/entities/bill.entity';
 import { Order } from '../order/entities/order.entity';
@@ -52,6 +52,11 @@ export class BranchService {
     return this.branchRepository.save(branch);
   }
 
+  async remove(id: string, businessId: string) {
+    const branch = await this.findOne(id, businessId);
+    return this.branchRepository.remove(branch);
+  }
+
   async getDashboardStats(branchId: string) {
     if (!branchId) {
       return {
@@ -74,7 +79,9 @@ export class BranchService {
 
       // Tables stats
       const totalTables = await this.tableRepository.count({ where: { branch_id: branchId } });
-      const activeTables = await this.tableRepository.count({ where: { branch_id: branchId, status: 'occupied' } });
+      const activeTables = await this.tableRepository.count({
+        where: { branch_id: branchId, status: TableStatus.OCCUPIED },
+      });
 
       // Tabs stats
       const openTabs = await this.tabRepository.count({ where: { branch_id: branchId, status: 'open' } });
