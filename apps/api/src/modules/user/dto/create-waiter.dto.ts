@@ -21,4 +21,9 @@ export class CreateWaiterDto {
   @IsNotEmpty()
   @IsString()
   branchId: string;
+
+  @ApiPropertyOptional({ example: 'https://example.com/avatar.jpg', description: 'URL of the waiter avatar image' })
+  @IsOptional()
+  @IsString()
+  avatar_url?: string;
 }

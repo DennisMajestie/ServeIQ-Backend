@@ -30,3 +30,15 @@ export interface ApiResponse<T> {
   data: T;
   meta?: any;
 }
+
+/**
+ * Robustly gets initials from a full name.
+ * Handles undefined/null names safely to prevent TypeErrors.
+ */
+export const getInitials = (name?: string): string => {
+  if (!name) return '';
+  const parts = name.trim().split(/\s+/);
+  if (parts.length === 0) return '';
+  if (parts.length === 1) return parts[0].charAt(0).toUpperCase();
+  return (parts[0].charAt(0) + parts[parts.length - 1].charAt(0)).toUpperCase();
+};
