@@ -29,18 +29,24 @@ import { CommonModule } from '@angular/common';
     </div>
   `,
   styles: [`
+    :host { display: block; }
     .image-upload-container {
       width: 150px;
       height: 150px;
-      border: 2px dashed #ccc;
-      border-radius: 8px;
+      border: 2px dashed #f97316;
+      border-radius: 12px;
       display: flex;
       justify-content: center;
       align-items: center;
       position: relative;
       cursor: pointer;
       overflow: hidden;
-      background: #f9f9f9;
+      background: #fff;
+      transition: all 0.2s;
+    }
+    .image-upload-container:hover {
+      border-color: #ea580c;
+      background: #fff7ed;
     }
     .preview-area {
       width: 100%;
