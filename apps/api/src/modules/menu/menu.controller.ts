@@ -36,9 +36,13 @@ export class MenuController {
   @ApiResponse({ status: 201, description: 'Menu item created.', type: MenuItem })
   @ApiResponse({ status: 400, description: 'Validation error.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async create(@Request() req: any, @Body() createDto: CreateMenuItemDto) {
+  async create(@Request() req: any, @Body() createDto: any) {
+    const data = { ...createDto };
+    if (data.price && !data.price_kobo) {
+      data.price_kobo = Math.round(data.price * 100);
+    }
     return this.menuService.create({
-      ...createDto,
+      ...data,
       branch_id: req.user.branchId,
       created_by: req.user.userId,
     });
@@ -53,9 +57,13 @@ export class MenuController {
   async update(
     @Param('id') id: string,
     @Request() req: any,
-    @Body() updateDto: UpdateMenuItemDto,
+    @Body() updateDto: any,
   ) {
-    return this.menuService.update(id, req.user.branchId, updateDto);
+    const data = { ...updateDto };
+    if (data.price && !data.price_kobo) {
+      data.price_kobo = Math.round(data.price * 100);
+    }
+    return this.menuService.update(id, req.user.branchId, data);
   }
 
   @Delete(':id')

@@ -37,7 +37,7 @@ export class TableController {
   @ApiResponse({ status: 201, description: 'Table created.', type: Table })
   @ApiResponse({ status: 400, description: 'Validation error.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async create(@Request() req: any, @Body() createDto: CreateTableDto) {
+  async create(@Request() req: any, @Body() createDto: any) {
     return this.tableService.create({
       ...createDto,
       branch_id: req.user.branchId,
@@ -53,7 +53,7 @@ export class TableController {
   async update(
     @Param('id') id: string,
     @Request() req: any,
-    @Body() updateDto: UpdateTableDto,
+    @Body() updateDto: any,
   ) {
     return this.tableService.update(id, req.user.branchId, updateDto);
   }

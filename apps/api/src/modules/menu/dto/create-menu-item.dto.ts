@@ -13,11 +13,17 @@ export class CreateMenuItemDto {
   @IsNotEmpty()
   category: string;
 
-  @ApiProperty({ example: 5000, description: 'Price in kobo (1 NGN = 100 kobo)' })
+  @ApiProperty({ example: 5000, description: 'Price in kobo (1 NGN = 100 kobo)', required: false })
   @IsNumber()
   @Min(0)
-  @IsNotEmpty()
-  price_kobo: number;
+  @IsOptional()
+  price_kobo?: number;
+
+  @ApiProperty({ example: 50, description: 'Price in Naira', required: false })
+  @IsNumber()
+  @Min(0)
+  @IsOptional()
+  price?: number;
 
   @ApiProperty({ example: 'bottle', required: false })
   @IsString()
