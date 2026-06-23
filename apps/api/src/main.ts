@@ -36,6 +36,7 @@ async function bootstrap() {
     'http://localhost:4200',
     'https://serveiq-admin.vercel.app',
     'https://serve-iq-one.vercel.app',
+    'https://serve-iq-waiter.vercel.app',
   ];
   app.enableCors({
     origin: allowedOrigins,
