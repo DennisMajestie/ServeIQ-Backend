@@ -89,10 +89,11 @@ export class BranchService {
       // Today's bills
       const todayBills = await this.billRepository
         .createQueryBuilder('bill')
-        .innerJoin('tabs', 'tab', 'tab.id = bill.tab_id')
-        .where('tab.branch_id = :branchId::uuid', { branchId })
+        .innerJoin(Tab, 'tab', 'tab.id::varchar = bill.tab_id::varchar')
+        .where('tab.branch_id::varchar = :branchId', { branchId })
         .andWhere('bill.paid_at >= :today', { today })
         .andWhere('bill.paid_at < :tomorrow', { tomorrow })
+
         .getMany();
 
       const dailyRevenue = todayBills.reduce((sum, bill) => sum + bill.total_kobo, 0);
@@ -129,8 +130,8 @@ export class BranchService {
       // Order history
       const recentOrders = await this.orderRepository
         .createQueryBuilder('order')
-        .innerJoin('tabs', 'tab', 'tab.id = order.tab_id')
-        .where('tab.branch_id = :branchId', { branchId })
+        .innerJoin(Tab, 'tab', 'tab.id::varchar = order.tab_id::varchar')
+        .where('tab.branch_id::varchar = :branchId', { branchId })
         .orderBy('order.created_at', 'DESC')
         .limit(20)
         .getMany();
