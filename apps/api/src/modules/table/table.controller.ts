@@ -38,8 +38,15 @@ export class TableController {
   @ApiResponse({ status: 400, description: 'Validation error.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async create(@Request() req: any, @Body() createDto: any) {
+    const data = { ...createDto };
+    
+    // Defensive mapping for Waiter app or other clients that might send different field names
+    if (!data.table_number) {
+      data.table_number = data.tableName || data.name || data.tableNumber || `T-${Math.floor(Math.random() * 1000)}`;
+    }
+    
     return this.tableService.create({
-      ...createDto,
+      ...data,
       branch_id: req.user.branchId,
     });
   }

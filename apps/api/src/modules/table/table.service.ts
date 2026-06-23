@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Table, TableStatus } from './entities/table.entity';
@@ -11,6 +11,14 @@ export class TableService {
   ) {}
 
   async create(createDto: any) {
+    if (createDto.table_number) {
+      const existing = await this.tableRepository.findOne({
+        where: { table_number: createDto.table_number, branch_id: createDto.branch_id },
+      });
+      if (existing) {
+        throw new BadRequestException(`Table number '${createDto.table_number}' already exists in this branch.`);
+      }
+    }
     const table = this.tableRepository.create(createDto);
     return this.tableRepository.save(table);
   }
