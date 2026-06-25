@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
-import { TypeOrmModule, getDataSourceToken } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { BillService } from './bill.service';
 import { BillController } from './bill.controller';
 import { Bill } from './entities/bill.entity';
@@ -14,13 +13,7 @@ import { Business } from '../business/entities/business.entity';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Bill, Tab, Order, Table, MenuItem, User, Branch, Business])],
-  providers: [
-    BillService,
-    {
-      provide: DataSource,
-      useExisting: getDataSourceToken(),
-    },
-  ],
+  providers: [BillService],
   controllers: [BillController],
   exports: [BillService],
 })
