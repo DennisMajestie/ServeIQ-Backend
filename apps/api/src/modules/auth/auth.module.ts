@@ -10,6 +10,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 
 @Module({
   imports: [
+    TypeOrmModule.forFeature([]),
     ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
