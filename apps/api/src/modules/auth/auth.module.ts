@@ -7,10 +7,13 @@ import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { User } from '../user/entities/user.entity';
+import { Business } from '../business/entities/business.entity';
+import { Branch } from '../branch/entities/branch.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([]),
+    TypeOrmModule.forFeature([User, Business, Branch]),
     ConfigModule,
     PassportModule,
     JwtModule.registerAsync({
@@ -27,10 +30,6 @@ import { JwtStrategy } from './strategies/jwt.strategy';
   providers: [
     AuthService,
     JwtStrategy,
-    {
-      provide: DataSource,
-      useExisting: getDataSourceToken(),
-    },
   ],
   controllers: [AuthController],
   exports: [AuthService],
