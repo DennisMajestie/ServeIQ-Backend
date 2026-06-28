@@ -1,10 +1,12 @@
 import { Inject, Injectable, UnauthorizedException, ConflictException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
-import { DataSource } from 'typeorm';
+import * as crypto from 'crypto';
+import { DataSource, MoreThan } from 'typeorm';
 import { User } from '../user/entities/user.entity';
 import { Business } from '../business/entities/business.entity';
 import { Branch } from '../branch/entities/branch.entity';
+import { RefreshToken } from '../../entities/refresh-token.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { WaiterLoginDto } from './dto/waiter-login.dto';
@@ -116,7 +118,22 @@ export class AuthService {
     throw new UnauthorizedException('Invalid PIN');
   }
 
-  private generateTokens(user: User) {
+  private async generateRefreshToken(userId: string): Promise<string> {
+    const repo = this.dataSource.getRepository(RefreshToken);
+    const token = crypto.randomBytes(48).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    const refreshToken = repo.create({
+      user_id: userId,
+      token_hash: tokenHash,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+    });
+    await repo.save(refreshToken);
+
+    return token;
+  }
+
+  private async generateTokens(user: User) {
     const payload = {
       sub: user.id,
       email: user.email,
@@ -125,8 +142,11 @@ export class AuthService {
       branchId: user.branch_id,
     };
 
+    const refreshToken = await this.generateRefreshToken(user.id);
+
     return {
       access_token: this.jwtService.sign(payload),
+      refresh_token: refreshToken,
       user: {
         id: user.id,
         email: user.email,
@@ -136,5 +156,40 @@ export class AuthService {
         branch: user.branch_id,
       },
     };
+  }
+
+  async refreshToken(refreshTokenStr: string) {
+    const tokenHash = crypto.createHash('sha256').update(refreshTokenStr).digest('hex');
+    const repo = this.dataSource.getRepository(RefreshToken);
+
+    const stored = await repo.findOne({
+      where: {
+        token_hash: tokenHash,
+        is_revoked: false,
+        expires_at: MoreThan(new Date()),
+      },
+    });
+
+    if (!stored) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    const user = await this.dataSource.getRepository(User).findOne({ where: { id: stored.user_id } });
+    if (!user || !user.is_active) {
+      throw new UnauthorizedException('User not found or inactive');
+    }
+
+    stored.is_revoked = true;
+    await repo.save(stored);
+
+    return this.generateTokens(user);
+  }
+
+  async logout(refreshTokenStr: string) {
+    const tokenHash = crypto.createHash('sha256').update(refreshTokenStr).digest('hex');
+    const repo = this.dataSource.getRepository(RefreshToken);
+
+    await repo.update({ token_hash: tokenHash }, { is_revoked: true });
+    return { message: 'Logged out successfully' };
   }
 }

@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Tab } from './entities/tab.entity';
@@ -102,6 +102,69 @@ export class TabService {
     });
     
     return this.tabRepository.save(tab);
+  }
+
+  async transferTab(id: string, branchId: string, targetTableId: string) {
+    const tab = await this.findOne(id, branchId);
+    if (tab.status !== 'open') {
+      throw new BadRequestException('Only open tabs can be transferred');
+    }
+
+    const targetTable = await this.tableRepository.findOne({ where: { id: targetTableId, branch_id: branchId } });
+    if (!targetTable) {
+      throw new NotFoundException('Target table not found');
+    }
+    if (targetTable.status !== TableStatus.AVAILABLE) {
+      throw new BadRequestException('Target table is not available');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      const oldTableId = tab.table_id;
+
+      await queryRunner.manager.update(Tab, id, { table_id: targetTableId });
+      await queryRunner.manager.update(Table, oldTableId, { status: TableStatus.AVAILABLE });
+      await queryRunner.manager.update(Table, targetTableId, { status: TableStatus.OCCUPIED });
+
+      await queryRunner.commitTransaction();
+      return this.findOne(id, branchId);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  async voidTab(id: string, branchId: string, reason: string) {
+    const tab = await this.findOne(id, branchId);
+    if (tab.status !== 'open') {
+      throw new BadRequestException('Only open tabs can be voided');
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      await queryRunner.manager.update(Tab, id, {
+        status: 'voided',
+        notes: `VOIDED: ${reason}`,
+        closed_at: new Date(),
+      });
+      await queryRunner.manager.update(Table, tab.table_id, { status: TableStatus.AVAILABLE });
+
+      await queryRunner.commitTransaction();
+      return this.findOne(id, branchId);
+    } catch (err) {
+      await queryRunner.rollbackTransaction();
+      throw err;
+    } finally {
+      await queryRunner.release();
+    }
   }
 
   async update(id: string, branchId: string, updateDto: any) {

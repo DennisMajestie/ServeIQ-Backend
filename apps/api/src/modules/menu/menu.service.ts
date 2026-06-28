@@ -37,6 +37,12 @@ export class MenuService {
     return this.menuRepository.save(item);
   }
 
+  async toggleAvailability(id: string, branchId: string) {
+    const item = await this.findOne(id, branchId);
+    item.is_available = !item.is_available;
+    return this.menuRepository.save(item);
+  }
+
   async remove(id: string, branchId: string) {
     const item = await this.findOne(id, branchId);
     return this.menuRepository.remove(item);

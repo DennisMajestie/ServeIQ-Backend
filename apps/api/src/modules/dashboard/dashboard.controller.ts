@@ -1,0 +1,52 @@
+import { Controller, Get, Query, UseGuards, Request } from '@nestjs/common';
+import { DashboardService } from './dashboard.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery, ApiResponse } from '@nestjs/swagger';
+
+@ApiTags('Dashboard')
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard)
+@Controller()
+export class DashboardController {
+  constructor(private readonly dashboardService: DashboardService) {}
+
+  @Get('dashboard/branch')
+  @ApiOperation({ summary: 'Branch overview — totals for tables, open tabs, today revenue' })
+  @ApiResponse({ status: 200, description: 'Branch overview stats.' })
+  async getBranchOverview(@Request() req: any) {
+    return this.dashboardService.getBranchOverview(req.user.branchId);
+  }
+
+  @Get('dashboard/waiters')
+  @ApiOperation({ summary: 'Waiter performance — tabs closed and revenue today by waiter' })
+  @ApiResponse({ status: 200, description: 'Waiter performance list.' })
+  async getWaiterPerformance(@Request() req: any) {
+    return this.dashboardService.getWaiterPerformance(req.user.branchId);
+  }
+
+  @Get('reports/sales')
+  @ApiOperation({ summary: 'Sales report with optional date range and payment method breakdown' })
+  @ApiQuery({ name: 'dateFrom', required: false, example: '2026-06-01' })
+  @ApiQuery({ name: 'dateTo', required: false, example: '2026-06-28' })
+  @ApiResponse({ status: 200, description: 'Sales report data.' })
+  async getSalesReport(
+    @Request() req: any,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.dashboardService.getSalesReport(req.user.branchId, dateFrom, dateTo);
+  }
+
+  @Get('reports/items')
+  @ApiOperation({ summary: 'Top selling items report with date range filter' })
+  @ApiQuery({ name: 'dateFrom', required: false, example: '2026-06-01' })
+  @ApiQuery({ name: 'dateTo', required: false, example: '2026-06-28' })
+  @ApiResponse({ status: 200, description: 'Top items list.' })
+  async getTopItems(
+    @Request() req: any,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.dashboardService.getTopItems(req.user.branchId, dateFrom, dateTo);
+  }
+}

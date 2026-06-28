@@ -11,6 +11,7 @@ import { MenuItem } from './modules/menu/entities/menu-item.entity';
 import { Tab } from './modules/tab/entities/tab.entity';
 import { Order } from './modules/order/entities/order.entity';
 import { Bill } from './modules/bill/entities/bill.entity';
+import { RefreshToken } from './entities/refresh-token.entity';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessModule } from './modules/business/business.module';
@@ -23,6 +24,7 @@ import { OrderModule } from './modules/order/order.module';
 import { BillModule } from './modules/bill/bill.module';
 import { AiModule } from './modules/ai/ai.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { DashboardModule } from './modules/dashboard/dashboard.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
@@ -44,6 +46,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
         Tab,
         Order,
         Bill,
+        RefreshToken,
       ],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
@@ -62,6 +65,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     OrderModule,
     BillModule,
     CloudinaryModule,
+    DashboardModule,
     AiModule,
     UploadModule,
   ],

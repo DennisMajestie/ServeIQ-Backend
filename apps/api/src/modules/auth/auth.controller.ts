@@ -3,6 +3,8 @@ import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { WaiterLoginDto } from './dto/waiter-login.dto';
+import { RefreshDto } from './dto/refresh.dto';
+import { LogoutDto } from './dto/logout.dto';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 
 @ApiTags('Authentication')
@@ -41,6 +43,23 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Invalid credentials.' })
   async login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Post('refresh')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token using a refresh token' })
+  @ApiResponse({ status: 200, description: 'New access token and refresh token issued.' })
+  @ApiResponse({ status: 401, description: 'Invalid or expired refresh token.' })
+  async refresh(@Body() refreshDto: RefreshDto) {
+    return this.authService.refreshToken(refreshDto.refresh_token);
+  }
+
+  @Post('logout')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Logout and invalidate refresh token' })
+  @ApiResponse({ status: 200, description: 'Logged out successfully.' })
+  async logout(@Body() logoutDto: LogoutDto) {
+    return this.authService.logout(logoutDto.refresh_token);
   }
 
   @Post(['waiter-login', 'activate'])

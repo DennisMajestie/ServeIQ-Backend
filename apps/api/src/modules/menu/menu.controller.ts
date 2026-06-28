@@ -66,6 +66,15 @@ export class MenuController {
     return this.menuService.update(id, req.user.branchId, data);
   }
 
+  @Patch(':id/toggle')
+  @ApiOperation({ summary: 'Toggle menu item availability (on/off)' })
+  @ApiParam({ name: 'id', description: 'Menu item UUID' })
+  @ApiResponse({ status: 200, description: 'Menu item availability toggled.' })
+  @ApiResponse({ status: 404, description: 'Menu item not found.' })
+  async toggleAvailability(@Param('id') id: string, @Request() req: any) {
+    return this.menuService.toggleAvailability(id, req.user.branchId);
+  }
+
   @Delete(':id')
   @ApiOperation({ summary: 'Delete a menu item' })
   @ApiParam({ name: 'id', description: 'Menu item UUID' })
