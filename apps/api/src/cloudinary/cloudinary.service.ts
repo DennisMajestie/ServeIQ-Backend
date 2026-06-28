@@ -13,6 +13,7 @@ export class CloudinaryService {
         { folder },
         (error, result) => {
           if (error) return reject(error);
+          if (!result) return reject(new Error('Upload returned no result'));
           resolve(result.secure_url);
         }
       );
