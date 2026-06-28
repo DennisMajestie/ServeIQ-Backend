@@ -27,7 +27,7 @@ export class UploadController {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
-    const url = `/uploads/${file.originalname}`;
+    const url = `/uploads/${file.filename}`;
     return { url };
   }
 }
