@@ -23,6 +23,7 @@ import { OrderModule } from './modules/order/order.module';
 import { BillModule } from './modules/bill/bill.module';
 import { AiModule } from './modules/ai/ai.module';
 import { UploadModule } from './modules/upload/upload.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 @Module({
   imports: [
@@ -60,6 +61,7 @@ import { UploadModule } from './modules/upload/upload.module';
     TabModule,
     OrderModule,
     BillModule,
+    CloudinaryModule,
     AiModule,
     UploadModule,
   ],

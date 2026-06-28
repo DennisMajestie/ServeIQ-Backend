@@ -4,14 +4,16 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
-  Req,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiTags, ApiOperation, ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { CloudinaryService } from '../../cloudinary/cloudinary.service';
 
 @ApiTags('Upload')
 @Controller({ path: 'upload', version: '1' })
 export class UploadController {
+  constructor(private readonly cloudinaryService: CloudinaryService) {}
+
   @Post()
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
@@ -24,12 +26,11 @@ export class UploadController {
       },
     },
   })
-  uploadFile(@UploadedFile() file: Express.Multer.File, @Req() req: any) {
+  async uploadFile(@UploadedFile() file: Express.Multer.File) {
     if (!file) {
       throw new BadRequestException('No file provided');
     }
-    const baseUrl = `${req.protocol}://${req.get('host')}`;
-    const url = `${baseUrl}/uploads/${file.filename}`;
+    const url = await this.cloudinaryService.uploadImage(file, 'serveiq');
     return { url };
   }
 }

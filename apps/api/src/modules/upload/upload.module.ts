@@ -1,20 +1,16 @@
 import { Module } from '@nestjs/common';
 import { MulterModule } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
-import { extname, join } from 'path';
+import { memoryStorage } from 'multer';
+import { extname } from 'path';
 import { UploadController } from './upload.controller';
+import { CloudinaryModule } from '../../cloudinary/cloudinary.module';
 
 @Module({
   imports: [
+    CloudinaryModule,
     MulterModule.register({
-      storage: diskStorage({
-        destination: join(process.cwd(), 'uploads'),
-        filename: (_req: any, file: Express.Multer.File, cb: (error: Error | null, filename: string) => void) => {
-          const uniqueSuffix = `${Date.now()}-${Math.round(Math.random() * 1e9)}`;
-          cb(null, `${uniqueSuffix}${extname(file.originalname)}`);
-        },
-      }),
-      limits: { fileSize: 10 * 1024 * 1024 }, // 10 MB max
+      storage: memoryStorage(),
+      limits: { fileSize: 10 * 1024 * 1024 },
       fileFilter: (_req: any, file: Express.Multer.File, cb: (error: Error | null, acceptFile: boolean) => void) => {
         const allowed = ['.jpg', '.jpeg', '.png', '.webp', '.pdf'];
         if (allowed.includes(extname(file.originalname).toLowerCase())) {
