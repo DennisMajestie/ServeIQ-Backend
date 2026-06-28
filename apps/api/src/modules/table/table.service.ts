@@ -23,10 +23,13 @@ export class TableService {
     return this.tableRepository.save(table);
   }
 
-  async findAllByBranch(branchId: string) {
-    return this.tableRepository.find({
-      where: { branch_id: branchId },
-    });
+  async findAllByBranch(branchId: string, pagination?: { page: number; per_page: number }) {
+    const where = { branch_id: branchId };
+    const skip = pagination ? (pagination.page - 1) * pagination.per_page : undefined;
+    const take = pagination ? pagination.per_page : undefined;
+
+    const [data, total] = await this.tableRepository.findAndCount({ where, skip, take });
+    return { data, total };
   }
 
   async findOne(id: string, branchId: string) {

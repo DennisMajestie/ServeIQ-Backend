@@ -15,10 +15,17 @@ export class MenuService {
     return this.menuRepository.save(item);
   }
 
-  async findAllByBranch(branchId: string) {
-    return this.menuRepository.find({
-      where: { branch_id: branchId, is_available: true },
+  async findAllByBranch(branchId: string, pagination?: { page: number; per_page: number }) {
+    const where = { branch_id: branchId, is_available: true };
+    const skip = pagination ? (pagination.page - 1) * pagination.per_page : undefined;
+    const take = pagination ? pagination.per_page : undefined;
+
+    const [data, total] = await this.menuRepository.findAndCount({
+      where,
+      skip,
+      take,
     });
+    return { data, total };
   }
 
   async findOne(id: string, branchId: string) {

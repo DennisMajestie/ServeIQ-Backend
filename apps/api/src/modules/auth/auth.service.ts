@@ -7,6 +7,7 @@ import { User } from '../user/entities/user.entity';
 import { Business } from '../business/entities/business.entity';
 import { Branch } from '../branch/entities/branch.entity';
 import { RefreshToken } from '../../entities/refresh-token.entity';
+import { VerificationToken } from '../../entities/verification-token.entity';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { WaiterLoginDto } from './dto/waiter-login.dto';
@@ -191,5 +192,91 @@ export class AuthService {
 
     await repo.update({ token_hash: tokenHash }, { is_revoked: true });
     return { message: 'Logged out successfully' };
+  }
+
+  async forgotPassword(email: string) {
+    const user = await this.dataSource.getRepository(User).findOne({ where: { email } });
+    if (!user) {
+      return { message: 'If that email exists, a reset link has been sent.' };
+    }
+
+    const repo = this.dataSource.getRepository(VerificationToken);
+    const token = crypto.randomBytes(32).toString('hex');
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+
+    await repo.save(repo.create({
+      user_id: user.id,
+      token: tokenHash,
+      type: 'password_reset',
+      expires_at: new Date(Date.now() + 60 * 60 * 1000),
+    }));
+
+    return { message: 'If that email exists, a reset link has been sent.', reset_token: token };
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const repo = this.dataSource.getRepository(VerificationToken);
+
+    const stored = await repo.findOne({
+      where: { token: tokenHash, type: 'password_reset', is_used: false, expires_at: MoreThan(new Date()) },
+    });
+    if (!stored) {
+      throw new BadRequestException('Invalid or expired reset token');
+    }
+
+    const user = await this.dataSource.getRepository(User).findOne({ where: { id: stored.user_id } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    const salt = await bcrypt.genSalt();
+    user.password_hash = await bcrypt.hash(newPassword, salt);
+    await this.dataSource.getRepository(User).save(user);
+
+    stored.is_used = true;
+    await repo.save(stored);
+
+    return { message: 'Password reset successfully' };
+  }
+
+  async sendEmailVerification(userId: string) {
+    const repo = this.dataSource.getRepository(VerificationToken);
+    const otp = String(Math.floor(100000 + Math.random() * 900000));
+    const tokenHash = crypto.createHash('sha256').update(otp).digest('hex');
+
+    await repo.save(repo.create({
+      user_id: userId,
+      token: tokenHash,
+      type: 'email_verify',
+      expires_at: new Date(Date.now() + 10 * 60 * 1000),
+    }));
+
+    return { message: 'Verification code sent', otp };
+  }
+
+  async verifyEmail(userId: string, otp: string) {
+    const tokenHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const repo = this.dataSource.getRepository(VerificationToken);
+
+    const stored = await repo.findOne({
+      where: { token: tokenHash, type: 'email_verify', is_used: false, expires_at: MoreThan(new Date()) },
+    });
+    if (!stored) {
+      throw new BadRequestException('Invalid or expired verification code');
+    }
+
+    const user = await this.dataSource.getRepository(User).findOne({ where: { id: userId } });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+
+    user.email_verified_at = new Date();
+    await this.dataSource.getRepository(User).save(user);
+
+    stored.is_used = true;
+    await repo.save(stored);
+
+    return { message: 'Email verified successfully' };
   }
 }

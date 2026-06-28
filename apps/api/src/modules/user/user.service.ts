@@ -117,11 +117,18 @@ export class UserService {
     }
   }
 
-  async findAllWaiters(branchId: string) {
-    return this.userRepository.find({
-      where: { branch_id: branchId, role: UserRole.WAITER },
+  async findAllWaiters(branchId: string, pagination?: { page: number; per_page: number }) {
+    const where = { branch_id: branchId, role: UserRole.WAITER };
+    const skip = pagination ? (pagination.page - 1) * pagination.per_page : undefined;
+    const take = pagination ? pagination.per_page : undefined;
+
+    const [data, total] = await this.userRepository.findAndCount({
+      where,
+      skip,
+      take,
       select: { id: true, full_name: true, email: true, phone: true, is_active: true, created_at: true },
     });
+    return { data, total };
   }
 
   async resetWaiterPin(waiterId: string, businessId: string): Promise<{ pin: string }> {
@@ -158,6 +165,29 @@ export class UserService {
   async update(id: string, branchId: string, updateDto: any) {
     const user = await this.findOne(id, branchId);
     Object.assign(user, updateDto);
+    return this.userRepository.save(user);
+  }
+
+  async updateProfile(userId: string, dto: any) {
+    const user = await this.userRepository.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+
+    if (dto.full_name) user.full_name = dto.full_name;
+    if (dto.phone) user.phone = dto.phone;
+    if (dto.password) {
+      const salt = await bcrypt.genSalt();
+      user.password_hash = await bcrypt.hash(dto.password, salt);
+    }
+
+    return this.userRepository.save(user);
+  }
+
+  async deactivateUser(id: string, businessId: string) {
+    const user = await this.userRepository.findOne({
+      where: { id, business_id: businessId },
+    });
+    if (!user) throw new NotFoundException('User not found or does not belong to your business');
+    user.is_active = false;
     return this.userRepository.save(user);
   }
 

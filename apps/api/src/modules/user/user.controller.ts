@@ -8,13 +8,16 @@ import {
   UseGuards,
   Request,
   Delete,
+  Query,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UserService } from './user.service';
 import { CreateWaiterDto } from './dto/create-waiter.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 import { User } from './entities/user.entity';
 import { ApiResponse } from '@nestjs/swagger';
+import { getPaginationParams, paginate } from '../../common/pagination';
 
 @ApiTags('User')
 @Controller('user')
@@ -34,13 +37,39 @@ export class UserController {
     return this.userService.createWaiter(dto, req.user.businessId);
   }
 
+  @Get('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Get own user profile' })
+  @ApiResponse({ status: 200, description: 'User profile.', type: User })
+  async getProfile(@Request() req: any) {
+    return this.userService.findOne(req.user.userId, req.user.branchId);
+  }
+
+  @Patch('me')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Update own user profile' })
+  @ApiResponse({ status: 200, description: 'Profile updated.' })
+  async updateProfile(@Request() req: any, @Body() dto: UpdateProfileDto) {
+    return this.userService.updateProfile(req.user.userId, dto);
+  }
+
   @Get('waiters')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
   @ApiOperation({ summary: 'List all waiters in the branch' })
+  @ApiQuery({ name: 'page', required: false, example: '1' })
+  @ApiQuery({ name: 'per_page', required: false, example: '20' })
   @ApiResponse({ status: 200, description: 'List of waiters.', type: [User] })
-  async getWaiters(@Request() req: { user: { branchId: string } }) {
-    return this.userService.findAllWaiters(req.user.branchId);
+  async getWaiters(
+    @Request() req: { user: { branchId: string } },
+    @Query('page') page?: string,
+    @Query('per_page') per_page?: string,
+  ) {
+    const pagination = getPaginationParams({ page, per_page });
+    const { data, total } = await this.userService.findAllWaiters(req.user.branchId, pagination);
+    return paginate(data, total, pagination);
   }
 
   @Patch('waiters/:id/reset-pin')
@@ -66,6 +95,18 @@ export class UserController {
     @Body() updateDto: any,
   ) {
     return this.userService.update(id, req.user.branchId, updateDto);
+  }
+
+  @Patch(':id/deactivate')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @ApiOperation({ summary: 'Deactivate a user (soft)' })
+  @ApiResponse({ status: 200, description: 'User deactivated.' })
+  async deactivateUser(
+    @Request() req: { user: { businessId: string } },
+    @Param('id') id: string,
+  ) {
+    return this.userService.deactivateUser(id, req.user.businessId);
   }
 
   @Delete(':id')

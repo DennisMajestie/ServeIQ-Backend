@@ -6,6 +6,7 @@ import { OpenTabDto } from './dto/open-tab.dto';
 import { TransferTabDto } from './dto/transfer-tab.dto';
 import { VoidTabDto } from './dto/void-tab.dto';
 import { Tab } from './entities/tab.entity';
+import { getPaginationParams, paginate } from '../../common/pagination';
 
 @ApiTags('Tabs')
 @ApiBearerAuth('access-token')
@@ -17,10 +18,19 @@ export class TabController {
   @Get()
   @ApiOperation({ summary: 'Get all tabs for the branch (optionally filtered by status)' })
   @ApiQuery({ name: 'status', required: false, enum: ['open', 'billed', 'paid', 'voided'] })
+  @ApiQuery({ name: 'page', required: false, example: '1' })
+  @ApiQuery({ name: 'per_page', required: false, example: '20' })
   @ApiResponse({ status: 200, description: 'List of tabs with details.', type: [Tab] })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async findAll(@Request() req: any, @Query('status') status?: string) {
-    return this.tabService.findAllByBranch(req.user.branchId, status);
+  async findAll(
+    @Request() req: any,
+    @Query('status') status?: string,
+    @Query('page') page?: string,
+    @Query('per_page') per_page?: string,
+  ) {
+    const pagination = getPaginationParams({ page, per_page });
+    const { data, total } = await this.tabService.findAllByBranch(req.user.branchId, status, pagination);
+    return paginate(data, total, pagination);
   }
 
   @Post('open')

@@ -61,15 +61,20 @@ export class TabService {
     return tab;
   }
 
-  async findAllByBranch(branchId: string, status?: string) {
+  async findAllByBranch(branchId: string, status?: string, pagination?: { page: number; per_page: number }) {
     const where: any = { branch_id: branchId };
     if (status) {
       where.status = status;
     }
     
-    const tabs = await this.tabRepository.find({
+    const skip = pagination ? (pagination.page - 1) * pagination.per_page : undefined;
+    const take = pagination ? pagination.per_page : undefined;
+
+    const [tabs, total] = await this.tabRepository.findAndCount({
       where,
       order: { opened_at: 'DESC' },
+      skip,
+      take,
     });
 
     const tabsWithDetails = [];
@@ -77,18 +82,18 @@ export class TabService {
       const table = await this.tableRepository.findOne({ where: { id: tab.table_id } });
       const waiter = await this.userRepository.findOne({ where: { id: tab.waiter_id } });
       const orders = await this.orderRepository.find({ where: { tab_id: tab.id } });
-      const total = orders.reduce((sum, order) => sum + order.subtotal_kobo, 0);
+      const totalKobo = orders.reduce((sum, order) => sum + order.subtotal_kobo, 0);
       
       tabsWithDetails.push({
         ...tab,
         table,
         waiter,
         orders,
-        total_kobo: total,
+        total_kobo: totalKobo,
       });
     }
 
-    return tabsWithDetails;
+    return { data: tabsWithDetails, total };
   }
 
   async closeTab(id: string, branchId: string) {

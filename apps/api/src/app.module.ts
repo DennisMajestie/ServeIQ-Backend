@@ -12,6 +12,9 @@ import { Tab } from './modules/tab/entities/tab.entity';
 import { Order } from './modules/order/entities/order.entity';
 import { Bill } from './modules/bill/entities/bill.entity';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { VerificationToken } from './entities/verification-token.entity';
+import { AuditLog } from './entities/audit-log.entity';
+import { AuditService } from './common/services/audit.service';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessModule } from './modules/business/business.module';
@@ -47,6 +50,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
         Order,
         Bill,
         RefreshToken,
+        VerificationToken,
+        AuditLog,
       ],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
@@ -55,6 +60,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
       retryDelay: 3000,
       autoLoadEntities: true,
     }),
+    TypeOrmModule.forFeature([AuditLog]),
     AuthModule,
     BusinessModule,
     UserModule,
@@ -70,6 +76,6 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     UploadModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, AuditService],
 })
 export class AppModule {}
