@@ -1,7 +1,9 @@
 export interface PaginationParams {
-  page?: number;
-  per_page?: number;
+  page: number;
+  per_page: number;
 }
+
+export type PaginationQuery = { page?: string; per_page?: string };
 
 export interface PaginatedResult<T> {
   data: T[];
@@ -13,7 +15,7 @@ export interface PaginatedResult<T> {
   };
 }
 
-export function getPaginationParams(query: { page?: string; per_page?: string }): PaginationParams {
+export function getPaginationParams(query: PaginationQuery): PaginationParams {
   const page = Math.max(1, parseInt(query.page || '1', 10) || 1);
   const per_page = Math.min(100, Math.max(1, parseInt(query.per_page || '20', 10) || 20));
   return { page, per_page };
