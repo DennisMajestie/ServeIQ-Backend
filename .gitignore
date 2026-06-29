@@ -31,3 +31,4 @@ coverage/
 *.tsbuildinfo
 .eslintcache
 node_modules
+apps/api/onboard-cloudinary.ts
