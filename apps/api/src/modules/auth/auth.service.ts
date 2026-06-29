@@ -119,19 +119,23 @@ export class AuthService {
     throw new UnauthorizedException('Invalid PIN');
   }
 
-  private async generateRefreshToken(userId: string): Promise<string> {
-    const repo = this.dataSource.getRepository(RefreshToken);
-    const token = crypto.randomBytes(48).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+  private async generateRefreshToken(userId: string): Promise<string | null> {
+    try {
+      const repo = this.dataSource.getRepository(RefreshToken);
+      const token = crypto.randomBytes(48).toString('hex');
+      const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
 
-    const refreshToken = repo.create({
-      user_id: userId,
-      token_hash: tokenHash,
-      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
-    });
-    await repo.save(refreshToken);
+      const refreshToken = repo.create({
+        user_id: userId,
+        token_hash: tokenHash,
+        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+      await repo.save(refreshToken);
 
-    return token;
+      return token;
+    } catch {
+      return null;
+    }
   }
 
   private async generateTokens(user: User) {
@@ -160,16 +164,17 @@ export class AuthService {
   }
 
   async refreshToken(refreshTokenStr: string) {
-    const tokenHash = crypto.createHash('sha256').update(refreshTokenStr).digest('hex');
     const repo = this.dataSource.getRepository(RefreshToken);
+    const tokenHash = crypto.createHash('sha256').update(refreshTokenStr).digest('hex');
 
-    const stored = await repo.findOne({
-      where: {
-        token_hash: tokenHash,
-        is_revoked: false,
-        expires_at: MoreThan(new Date()),
-      },
-    });
+    let stored: RefreshToken | null = null;
+    try {
+      stored = await repo.findOne({
+        where: { token_hash: tokenHash, is_revoked: false, expires_at: MoreThan(new Date()) },
+      });
+    } catch {
+      throw new BadRequestException('Refresh tokens not available');
+    }
 
     if (!stored) {
       throw new UnauthorizedException('Invalid or expired refresh token');
@@ -187,10 +192,13 @@ export class AuthService {
   }
 
   async logout(refreshTokenStr: string) {
-    const tokenHash = crypto.createHash('sha256').update(refreshTokenStr).digest('hex');
-    const repo = this.dataSource.getRepository(RefreshToken);
-
-    await repo.update({ token_hash: tokenHash }, { is_revoked: true });
+    try {
+      const tokenHash = crypto.createHash('sha256').update(refreshTokenStr).digest('hex');
+      const repo = this.dataSource.getRepository(RefreshToken);
+      await repo.update({ token_hash: tokenHash }, { is_revoked: true });
+    } catch {
+      // table may not exist; skip
+    }
     return { message: 'Logged out successfully' };
   }
 
