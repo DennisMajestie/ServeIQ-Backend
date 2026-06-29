@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request, Res } from '@nestjs/common';
+import { Response } from 'express';
 import { BillService } from './bill.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiProduces } from '@nestjs/swagger';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
 import { GenerateBillDto } from './dto/generate-bill.dto';
 import { ApplyDiscountDto } from './dto/apply-discount.dto';
@@ -47,13 +48,30 @@ export class BillController {
   }
 
   @Get('tab/:tabId/receipt')
-  @ApiOperation({ summary: 'Get receipt for a paid tab' })
+  @ApiOperation({ summary: 'Get receipt details as JSON' })
   @ApiParam({ name: 'tabId', description: 'Tab UUID', example: 'tab-uuid-here' })
   @ApiResponse({ status: 200, description: 'Receipt details.' })
   @ApiResponse({ status: 404, description: 'Tab or bill not found.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
   async getReceipt(@Param('tabId') tabId: string) {
     return this.billService.getReceipt(tabId);
+  }
+
+  @Get('tab/:tabId/receipt/pdf')
+  @ApiOperation({ summary: 'Download receipt as PDF' })
+  @ApiParam({ name: 'tabId', description: 'Tab UUID', example: 'tab-uuid-here' })
+  @ApiProduces('application/pdf')
+  @ApiResponse({ status: 200, description: 'PDF receipt.' })
+  @ApiResponse({ status: 404, description: 'Tab or bill not found.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  async getReceiptPdf(@Param('tabId') tabId: string, @Res() res: Response) {
+    const pdf = await this.billService.getReceiptPdf(tabId);
+    res.set({
+      'Content-Type': 'application/pdf',
+      'Content-Disposition': `attachment; filename="receipt-${tabId}.pdf"`,
+      'Content-Length': pdf.length,
+    });
+    res.end(pdf);
   }
 }
 

@@ -13,6 +13,8 @@ import { GenerateBillDto } from './dto/generate-bill.dto';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
 import { ApplyDiscountDto } from './dto/apply-discount.dto';
 import { InventoryService } from '../inventory/inventory.service';
+import { ReceiptService } from './receipt.service';
+import { CloudinaryService } from '../../cloudinary/cloudinary.service';
 
 @Injectable()
 export class BillService {
@@ -36,6 +38,8 @@ export class BillService {
     @Inject(DataSource)
     private dataSource: DataSource,
     private inventoryService: InventoryService,
+    private receiptService: ReceiptService,
+    private cloudinaryService: CloudinaryService,
   ) {}
 
   async generateBill(tabId: string, userId: string, generateBillDto?: GenerateBillDto) {
@@ -91,7 +95,7 @@ export class BillService {
       bill.payment_reference = paymentDto.reference;
     }
     bill.paid_at = new Date();
-    
+
     await this.billRepository.save(bill);
     
     // Update Tab Status
@@ -111,10 +115,27 @@ export class BillService {
       console.error('Inventory deduction failed (non-blocking):', err.message);
     }
 
+    // Generate PDF receipt and upload to Cloudinary
+    try {
+      const receiptData = await this.buildReceiptData(tabId);
+      const pdfBuffer = this.receiptService.generatePdf(receiptData);
+      const uploadResult = await this.cloudinaryService.uploadFile(
+        pdfBuffer,
+        `receipts/${tabId}`,
+        'raw',
+      );
+      if (uploadResult?.secure_url) {
+        bill.receipt_url = uploadResult.secure_url;
+        await this.billRepository.save(bill);
+      }
+    } catch (err) {
+      console.error('PDF receipt generation failed (non-blocking):', err.message);
+    }
+
     return bill;
   }
 
-  async getReceipt(tabId: string) {
+  private async buildReceiptData(tabId: string) {
     const tab = await this.tabRepository.findOne({ where: { id: tabId } });
     if (!tab) throw new NotFoundException('Tab not found');
 
@@ -122,7 +143,7 @@ export class BillService {
     if (!bill) throw new NotFoundException('Bill not found');
 
     const orders = await this.orderRepository.find({ where: { tab_id: tabId } });
-    
+
     const orderItems = [];
     for (const order of orders) {
       const menuItem = await this.menuItemRepository.findOne({ where: { id: order.menu_item_id } });
@@ -147,5 +168,14 @@ export class BillService {
       orders: orderItems,
       receipt_number: `RCP-${Date.now()}`,
     };
+  }
+
+  async getReceipt(tabId: string) {
+    return this.buildReceiptData(tabId);
+  }
+
+  async getReceiptPdf(tabId: string): Promise<Buffer> {
+    const data = await this.buildReceiptData(tabId);
+    return this.receiptService.generatePdf(data);
   }
 }
