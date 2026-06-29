@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Bill } from './entities/bill.entity';
@@ -11,6 +11,7 @@ import { Branch } from '../branch/entities/branch.entity';
 import { Business } from '../business/entities/business.entity';
 import { GenerateBillDto } from './dto/generate-bill.dto';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
+import { InventoryService } from '../inventory/inventory.service';
 
 @Injectable()
 export class BillService {
@@ -33,6 +34,7 @@ export class BillService {
     private businessRepository: Repository<Business>,
     @Inject(DataSource)
     private dataSource: DataSource,
+    private inventoryService: InventoryService,
   ) {}
 
   async generateBill(tabId: string, userId: string, generateBillDto?: GenerateBillDto) {
@@ -76,6 +78,20 @@ export class BillService {
     
     // Update Tab Status
     await this.tabRepository.update(tabId, { status: 'paid', closed_at: new Date() });
+
+    // Auto-deduct inventory stock
+    try {
+      const tab = await this.tabRepository.findOne({ where: { id: tabId } });
+      if (tab) {
+        const orders = await this.orderRepository.find({ where: { tab_id: tabId } });
+        await this.inventoryService.deductStockByTab(
+          { id: tabId, branch_id: tab.branch_id },
+          orders.map(o => ({ menu_item_id: o.menu_item_id, quantity: o.quantity })),
+        );
+      }
+    } catch (err) {
+      console.error('Inventory deduction failed (non-blocking):', err.message);
+    }
 
     return bill;
   }

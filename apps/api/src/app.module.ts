@@ -15,6 +15,9 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { VerificationToken } from './entities/verification-token.entity';
 import { AuditLog } from './entities/audit-log.entity';
 import { AuditService } from './common/services/audit.service';
+import { InventoryModule } from './modules/inventory/inventory.module';
+import { InventoryItem } from './modules/inventory/entities/inventory-item.entity';
+import { StockMovement } from './modules/inventory/entities/stock-movement.entity';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessModule } from './modules/business/business.module';
@@ -52,6 +55,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
         RefreshToken,
         VerificationToken,
         AuditLog,
+        InventoryItem,
+        StockMovement,
       ],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
@@ -72,6 +77,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     BillModule,
     CloudinaryModule,
     DashboardModule,
+    InventoryModule,
     AiModule,
     UploadModule,
   ],
