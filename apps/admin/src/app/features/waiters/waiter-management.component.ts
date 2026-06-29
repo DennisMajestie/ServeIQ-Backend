@@ -28,8 +28,10 @@ import { getInitials } from '../../../../../../libs/shared';
               <p>{{ waiter.email }}</p>
             </div>
           </div>
-          <div class="actions">
+            <div class="actions">
             <button (click)="editWaiter(waiter)">Edit</button>
+            <button (click)="resetPin(waiter.id)">Reset PIN</button>
+            <button class="deactivate" *ngIf="waiter.isActive !== false" (click)="deactivateWaiter(waiter.id)">Deactivate</button>
             <button class="delete" (click)="deleteWaiter(waiter.id)">Delete</button>
           </div>
         </div>
@@ -81,6 +83,7 @@ import { getInitials } from '../../../../../../libs/shared';
     .avatar img { width: 100%; height: 100%; object-fit: cover; }
     .actions { display: flex; gap: 0.5rem; }
     .delete { color: #ef4444; }
+    .deactivate { color: #f59e0b; }
     .modal { 
       position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5);
       display: flex; justify-content: center; align-items: center; z-index: 1000;
@@ -105,7 +108,9 @@ export class WaiterManagementComponent implements OnInit {
   }
 
   loadWaiters() {
-    this.http.get<any[]>('/api/v1/user/waiters').subscribe(data => this.waiters = data);
+    this.http.get<any>('/api/v1/user/waiters').subscribe(res => {
+      this.waiters = res.data || res;
+    });
   }
 
   openAddModal() {
@@ -131,12 +136,26 @@ export class WaiterManagementComponent implements OnInit {
   saveWaiter() {
     const request = this.isEditing 
       ? this.http.patch(`/api/v1/user/${this.currentWaiter.id}`, this.currentWaiter)
-      : this.http.post('/api/v1/user/invite-waiter', this.currentWaiter);
+      : this.http.post('/api/v1/user/waiters', this.currentWaiter);
 
     request.subscribe(() => {
       this.loadWaiters();
       this.closeModal();
     });
+  }
+
+  resetPin(id: string) {
+    if (confirm('Reset PIN for this waiter? They will receive a new default PIN.')) {
+      this.http.patch(`/api/v1/user/waiters/${id}/reset-pin`, {}).subscribe(() => {
+        alert('PIN reset successfully');
+      });
+    }
+  }
+
+  deactivateWaiter(id: string) {
+    if (confirm('Deactivate this waiter? They will no longer be able to log in.')) {
+      this.http.patch(`/api/v1/user/${id}/deactivate`, {}).subscribe(() => this.loadWaiters());
+    }
   }
 
   deleteWaiter(id: string) {

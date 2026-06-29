@@ -38,6 +38,34 @@ import { HttpClient } from '@angular/common/http';
       </section>
 
       <section class="card">
+        <h2>Security</h2>
+        <div class="field">
+          <label>New Password</label>
+          <input type="password" [(ngModel)]="passwordData.password" name="newPassword" minlength="8" />
+        </div>
+        <div class="field">
+          <label>Confirm Password</label>
+          <input type="password" [(ngModel)]="passwordData.confirm" name="confirmPassword" />
+        </div>
+        <button class="save-btn" (click)="changePassword()" [disabled]="!passwordData.password || passwordData.password.length < 8">Change Password</button>
+      </section>
+
+      <section class="card">
+        <h2>Email Verification</h2>
+        <p class="status" *ngIf="verified">✓ Your email is verified</p>
+        <p class="status warn" *ngIf="!verified && !sent">Your email has not been verified yet.</p>
+        <p class="status" *ngIf="sent">Verification code sent to your email.</p>
+        <div class="field" *ngIf="sent">
+          <label>Verification Code</label>
+          <input type="text" [(ngModel)]="verifyCode" name="verifyCode" placeholder="Enter 6-digit code" />
+        </div>
+        <div style="display:flex; gap:0.5rem; margin-top:0.5rem;">
+          <button class="save-btn" (click)="sendVerification()" [disabled]="sent">Send Code</button>
+          <button class="save-btn outline" (click)="verifyEmail()" *ngIf="sent" [disabled]="!verifyCode">Verify</button>
+        </div>
+      </section>
+
+      <section class="card">
         <h2>Business Settings</h2>
         <div class="field">
           <label>Tax Rate (%)</label>
@@ -79,6 +107,11 @@ import { HttpClient } from '@angular/common/http';
     .field input:focus, .field select:focus { outline: 2px solid #f97316; border-color: transparent; }
     .save-btn { margin-top: 0.5rem; padding: 0.625rem 1.5rem; background: #f97316; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; }
     .save-btn:hover { background: #ea580c; }
+    .save-btn.outline { background: white; color: #f97316; border: 2px solid #f97316; }
+    .save-btn.outline:hover { background: #fff7ed; }
+    .save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+    .status { font-size: 0.875rem; color: #6b7280; margin-bottom: 0.75rem; }
+    .status.warn { color: #f59e0b; }
   `]
 })
 export class SettingsComponent implements OnInit {
@@ -88,15 +121,20 @@ export class SettingsComponent implements OnInit {
   business: any = { tax_rate: 7.5, currency: 'NGN', timezone: 'Africa/Lagos' };
   saved = false;
 
+  passwordData = { password: '', confirm: '' };
+  verified = false;
+  sent = false;
+  verifyCode = '';
+
   constructor(private http: HttpClient) {}
 
   ngOnInit() {
     this.http.get<any>('/api/v1/user/me').subscribe(u => {
       this.profile = u;
     });
-    this.http.get<any[]>('/api/v1/branches').subscribe(list => {
-      this.branches = list;
-      if (list.length) this.selectedBranchId = list[0].id;
+    this.http.get<any>('/api/v1/branches').subscribe(list => {
+      this.branches = Array.isArray(list) ? list : list.data || [];
+      if (this.branches.length) this.selectedBranchId = this.branches[0].id;
     });
     this.http.get<any>('/api/v1/businesses/me').subscribe(b => {
       this.business = b;
@@ -109,6 +147,31 @@ export class SettingsComponent implements OnInit {
 
   saveBusiness() {
     this.http.patch('/api/v1/businesses/me', this.business).subscribe(() => this.flashSaved());
+  }
+
+  changePassword() {
+    if (this.passwordData.password !== this.passwordData.confirm) {
+      alert('Passwords do not match');
+      return;
+    }
+    this.http.patch('/api/v1/user/me', { password: this.passwordData.password }).subscribe(() => {
+      this.passwordData = { password: '', confirm: '' };
+      alert('Password changed successfully');
+    });
+  }
+
+  sendVerification() {
+    this.http.post('/api/v1/auth/send-verification', {}).subscribe(() => {
+      this.sent = true;
+    });
+  }
+
+  verifyEmail() {
+    this.http.post('/api/v1/auth/verify-email', { code: this.verifyCode }).subscribe(() => {
+      this.verified = true;
+      this.sent = false;
+      this.verifyCode = '';
+    });
   }
 
   private flashSaved() {
