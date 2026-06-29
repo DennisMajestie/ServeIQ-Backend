@@ -1,25 +1,48 @@
 services:
   - type: web
-    name: serveiq-backend
+    name: serveiq-api
     env: node
-    plan: starter
+    plan: free
     buildCommand: cd apps/api && npm install && npm run build
-    startCommand: cd apps/api && npm run migration:run && npm run start:prod
+    startCommand: cd apps/api && npm run migration:run && node dist/main.js
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
+      - key: CORS_ORIGIN
+        value: https://serve-iq-one.vercel.app,https://serveiq-admin.vercel.app
       - key: DATABASE_URL
         fromDatabase:
           name: serveiq-db
           property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 15m
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 7d
       - key: REDIS_URL
         fromService:
-          name: serveiq-redis
           type: redis
+          name: serveiq-redis
           property: connectionString
+      - key: NEMOTRON_API_KEY
+        sync: false
+      - key: NEMOTRON_BASE_URL
+        value: https://integrate.api.nvidia.com/v1
+      - key: NEMOTRON_MODEL
+        value: meta/llama-3.1-70b-instruct
+  - type: redis
+    name: serveiq-redis
+    plan: free
+    ipAllowList: []
 
 databases:
   - name: serveiq-db
     databaseName: serveiq
     user: serveiq
-    plan: starter
+    plan: free
+    ipAllowList: []
