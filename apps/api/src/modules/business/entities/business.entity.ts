@@ -38,12 +38,6 @@ export class Business {
   @Column({ default: 'NGN' })
   currency: string;
 
-  @Column({ type: 'decimal', precision: 5, scale: 2, default: 7.5 })
-  tax_rate: number;
-
-  @Column({ default: 'Africa/Lagos' })
-  timezone: string;
-
   @Column({ default: 'free_trial' })
   subscription_plan: string;
 
