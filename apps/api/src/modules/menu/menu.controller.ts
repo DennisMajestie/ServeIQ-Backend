@@ -1,7 +1,9 @@
-import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Request, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Patch, Delete, UseGuards, Request, Query, UploadedFile, UseInterceptors, BadRequestException } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { memoryStorage } from 'multer';
 import { MenuService } from './menu.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiQuery, ApiConsumes } from '@nestjs/swagger';
 import { CreateMenuItemDto } from './dto/create-menu-item.dto';
 import { UpdateMenuItemDto } from './dto/update-menu-item.dto';
 import { MenuItem } from './entities/menu-item.entity';
@@ -73,6 +75,16 @@ export class MenuController {
       data.price_kobo = Math.round(data.price * 100);
     }
     return this.menuService.update(id, req.user.branchId, data);
+  }
+
+  @Post('import')
+  @UseInterceptors(FileInterceptor('file', { storage: memoryStorage() }))
+  @ApiConsumes('multipart/form-data')
+  @ApiOperation({ summary: 'Bulk import menu items from CSV (columns: name, category, price, unit, sku)' })
+  @ApiResponse({ status: 201, description: 'Items imported.' })
+  async importCsv(@Request() req: any, @UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('CSV file required');
+    return this.menuService.importCsv(req.user.branchId, req.user.userId, file.buffer.toString());
   }
 
   @Patch(':id/toggle')

@@ -1,0 +1,47 @@
+import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request } from '@nestjs/common';
+import { SupplierService } from './supplier.service';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { CreateSupplierDto } from './dto/create-supplier.dto';
+import { UpdateSupplierDto } from './dto/update-supplier.dto';
+
+@ApiTags('Suppliers')
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard)
+@Controller('suppliers')
+export class SupplierController {
+  constructor(private readonly supplierService: SupplierService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'List all suppliers for the branch' })
+  async findAll(@Request() req: any) {
+    return this.supplierService.findAll(req.user.branchId);
+  }
+
+  @Get(':id')
+  @ApiOperation({ summary: 'Get a supplier by ID' })
+  @ApiParam({ name: 'id' })
+  async findOne(@Param('id') id: string, @Request() req: any) {
+    return this.supplierService.findOne(id, req.user.branchId);
+  }
+
+  @Post()
+  @ApiOperation({ summary: 'Create a new supplier' })
+  async create(@Request() req: any, @Body() dto: CreateSupplierDto) {
+    return this.supplierService.create(req.user.branchId, dto);
+  }
+
+  @Patch(':id')
+  @ApiOperation({ summary: 'Update a supplier' })
+  @ApiParam({ name: 'id' })
+  async update(@Param('id') id: string, @Request() req: any, @Body() dto: UpdateSupplierDto) {
+    return this.supplierService.update(id, req.user.branchId, dto);
+  }
+
+  @Delete(':id')
+  @ApiOperation({ summary: 'Delete a supplier' })
+  @ApiParam({ name: 'id' })
+  async remove(@Param('id') id: string, @Request() req: any) {
+    return this.supplierService.remove(id, req.user.branchId);
+  }
+}

@@ -18,6 +18,10 @@ import { AuditService } from './common/services/audit.service';
 import { InventoryModule } from './modules/inventory/inventory.module';
 import { InventoryItem } from './modules/inventory/entities/inventory-item.entity';
 import { StockMovement } from './modules/inventory/entities/stock-movement.entity';
+import { SupplierModule } from './modules/supplier/supplier.module';
+import { Supplier } from './modules/supplier/entities/supplier.entity';
+import { ShiftModule } from './modules/shift/shift.module';
+import { Shift } from './modules/shift/entities/shift.entity';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessModule } from './modules/business/business.module';
@@ -57,6 +61,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
         AuditLog,
         InventoryItem,
         StockMovement,
+        Supplier,
+        Shift,
       ],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
@@ -78,6 +84,8 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     CloudinaryModule,
     DashboardModule,
     InventoryModule,
+    SupplierModule,
+    ShiftModule,
     AiModule,
     UploadModule,
   ],

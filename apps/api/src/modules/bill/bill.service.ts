@@ -1,4 +1,4 @@
-import { Inject, Injectable, NotFoundException, forwardRef } from '@nestjs/common';
+import { Inject, Injectable, NotFoundException, BadRequestException, forwardRef } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, DataSource } from 'typeorm';
 import { Bill } from './entities/bill.entity';
@@ -11,6 +11,7 @@ import { Branch } from '../branch/entities/branch.entity';
 import { Business } from '../business/entities/business.entity';
 import { GenerateBillDto } from './dto/generate-bill.dto';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
+import { ApplyDiscountDto } from './dto/apply-discount.dto';
 import { InventoryService } from '../inventory/inventory.service';
 
 @Injectable()
@@ -62,6 +63,23 @@ export class BillService {
     await this.tabRepository.update(tabId, { status: 'billed', billed_at: new Date() });
 
     return savedBill;
+  }
+
+  async applyDiscount(tabId: string, dto: ApplyDiscountDto) {
+    const bill = await this.billRepository.findOne({ where: { tab_id: tabId } });
+    if (!bill) throw new NotFoundException('Bill not found');
+    if (bill.paid_at) throw new BadRequestException('Cannot modify a paid bill');
+
+    if (dto.discount_kobo !== undefined) {
+      bill.discount_kobo = dto.discount_kobo;
+    } else if (dto.discount_percent !== undefined) {
+      bill.discount_kobo = Math.round(bill.subtotal_kobo * (dto.discount_percent / 100));
+    }
+
+    bill.total_kobo = bill.subtotal_kobo + bill.service_charge_kobo - bill.discount_kobo;
+    if (bill.total_kobo < 0) bill.total_kobo = 0;
+
+    return this.billRepository.save(bill);
   }
 
   async processPayment(tabId: string, paymentDto: ProcessPaymentDto) {

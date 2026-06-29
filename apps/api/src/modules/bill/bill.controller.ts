@@ -4,6 +4,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiBody } from '@nestjs/swagger';
 import { ProcessPaymentDto } from './dto/process-payment.dto';
 import { GenerateBillDto } from './dto/generate-bill.dto';
+import { ApplyDiscountDto } from './dto/apply-discount.dto';
 
 @ApiTags('Bills')
 @ApiBearerAuth('access-token')
@@ -25,6 +26,13 @@ export class BillController {
     @Body() generateBillDto?: GenerateBillDto,
   ) {
     return this.billService.generateBill(tabId, req.user.userId, generateBillDto);
+  }
+
+  @Post('tab/:tabId/apply-discount')
+  @ApiOperation({ summary: 'Apply a discount to a bill (fixed kobo or percentage)' })
+  @ApiParam({ name: 'tabId' })
+  async applyDiscount(@Param('tabId') tabId: string, @Body() dto: ApplyDiscountDto) {
+    return this.billService.applyDiscount(tabId, dto);
   }
 
   @Post('tab/:tabId/pay')
