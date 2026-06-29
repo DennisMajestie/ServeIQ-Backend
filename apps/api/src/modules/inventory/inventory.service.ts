@@ -1,9 +1,11 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository, LessThan } from 'typeorm';
+import { Repository, LessThan, Between } from 'typeorm';
 import { InventoryItem } from './entities/inventory-item.entity';
 import { StockMovement } from './entities/stock-movement.entity';
 import { MenuItem } from '../menu/entities/menu-item.entity';
+import { Order } from '../order/entities/order.entity';
+import { Tab } from '../tab/entities/tab.entity';
 
 @Injectable()
 export class InventoryService {
@@ -14,6 +16,10 @@ export class InventoryService {
     private movementRepository: Repository<StockMovement>,
     @InjectRepository(MenuItem)
     private menuRepository: Repository<MenuItem>,
+    @InjectRepository(Order)
+    private orderRepository: Repository<Order>,
+    @InjectRepository(Tab)
+    private tabRepository: Repository<Tab>,
   ) {}
 
   async findAll(branchId: string) {
@@ -164,5 +170,65 @@ export class InventoryService {
       where: { inventory_item_id: inventoryItemId, branch_id: branchId },
       order: { created_at: 'DESC' },
     });
+  }
+
+  async getBestsellers(branchId: string, dateFrom?: string, dateTo?: string) {
+    const from = dateFrom ? new Date(dateFrom) : new Date(new Date().setHours(0, 0, 0, 0));
+    const to = dateTo ? new Date(dateTo) : new Date(new Date().setHours(23, 59, 59, 999));
+    if (!dateFrom) from.setHours(0, 0, 0, 0);
+
+    const items = await this.inventoryRepository.find({
+      where: { branch_id: branchId },
+      relations: { menu_item: true },
+    });
+
+    const paidTabs = await this.tabRepository.find({
+      where: { branch_id: branchId, status: 'paid', closed_at: Between(from, to) },
+    });
+    const tabIds = paidTabs.map(t => t.id);
+
+    const orderMap: Record<string, { qty: number; revenue: number }> = {};
+    if (tabIds.length > 0) {
+      const orders = await this.orderRepository
+        .createQueryBuilder('order')
+        .where('order.tab_id IN (:...tabIds)', { tabIds })
+        .getMany();
+
+      for (const order of orders) {
+        if (!orderMap[order.menu_item_id]) {
+          orderMap[order.menu_item_id] = { qty: 0, revenue: 0 };
+        }
+        orderMap[order.menu_item_id].qty += order.quantity;
+        orderMap[order.menu_item_id].revenue += order.subtotal_kobo;
+      }
+    }
+
+    const result = items
+      .map(item => {
+        const sales = orderMap[item.menu_item_id] || { qty: 0, revenue: 0 };
+        const turnoverDays = item.quantity_in_stock > 0 && sales.qty > 0
+          ? Math.round((item.quantity_in_stock / sales.qty) * 30)
+          : null;
+
+        return {
+          inventory_item_id: item.id,
+          menu_item_id: item.menu_item_id,
+          menu_item_name: item.menu_item?.name || 'Unknown',
+          category: item.menu_item?.category || 'Unknown',
+          current_stock: item.quantity_in_stock,
+          reorder_level: item.reorder_level,
+          is_low_stock: item.quantity_in_stock <= item.reorder_level,
+          total_sold: sales.qty,
+          revenue_kobo: sales.revenue,
+          estimated_days_until_out: turnoverDays,
+        };
+      })
+      .sort((a, b) => b.total_sold - a.total_sold);
+
+    return {
+      bestsellers: result.filter(r => r.total_sold > 0),
+      slow_movers: result.filter(r => r.total_sold === 0 && r.current_stock > 0),
+      out_of_stock: result.filter(r => r.current_stock === 0),
+    };
   }
 }

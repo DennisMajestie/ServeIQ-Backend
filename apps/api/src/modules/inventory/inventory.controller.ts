@@ -1,7 +1,7 @@
 import { Controller, Get, Post, Patch, Delete, Body, Param, UseGuards, Request, Query } from '@nestjs/common';
 import { InventoryService } from './inventory.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiParam, ApiQuery } from '@nestjs/swagger';
 
 @ApiTags('Inventory')
 @ApiBearerAuth('access-token')
@@ -15,6 +15,19 @@ export class InventoryController {
   @ApiResponse({ status: 200, description: 'List of inventory items.' })
   async findAll(@Request() req: any) {
     return this.inventoryService.findAll(req.user.branchId);
+  }
+
+  @Get('inventory/bestsellers')
+  @ApiOperation({ summary: 'Best-selling inventory items with sales data and stock levels for restock prioritization' })
+  @ApiQuery({ name: 'dateFrom', required: false, example: '2026-06-01' })
+  @ApiQuery({ name: 'dateTo', required: false, example: '2026-06-28' })
+  @ApiResponse({ status: 200, description: 'Bestsellers, slow movers, and out-of-stock items.' })
+  async getBestsellers(
+    @Request() req: any,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.inventoryService.getBestsellers(req.user.branchId, dateFrom, dateTo);
   }
 
   @Get('inventory/alerts')
