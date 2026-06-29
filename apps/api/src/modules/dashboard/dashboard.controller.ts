@@ -37,6 +37,19 @@ export class DashboardController {
     return this.dashboardService.getSalesReport(req.user.branchId, dateFrom, dateTo);
   }
 
+  @Get('reports/peak-hours')
+  @ApiOperation({ summary: 'Orders and revenue grouped by hour of day' })
+  @ApiQuery({ name: 'dateFrom', required: false, example: '2026-06-01' })
+  @ApiQuery({ name: 'dateTo', required: false, example: '2026-06-28' })
+  @ApiResponse({ status: 200, description: 'Hourly breakdown array (0-23).' })
+  async getPeakHours(
+    @Request() req: any,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+  ) {
+    return this.dashboardService.getPeakHours(req.user.branchId, dateFrom, dateTo);
+  }
+
   @Get('reports/items')
   @ApiOperation({ summary: 'Top selling items report with date range filter' })
   @ApiQuery({ name: 'dateFrom', required: false, example: '2026-06-01' })

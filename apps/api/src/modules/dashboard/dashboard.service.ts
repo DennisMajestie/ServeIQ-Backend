@@ -132,6 +132,42 @@ export class DashboardService {
     };
   }
 
+  async getPeakHours(branchId: string, dateFrom?: string, dateTo?: string) {
+    const from = dateFrom ? new Date(dateFrom) : new Date(new Date().setHours(0, 0, 0, 0));
+    const to = dateTo ? new Date(dateTo) : new Date(new Date().setHours(23, 59, 59, 999));
+    if (!dateFrom) from.setHours(0, 0, 0, 0);
+
+    const rows = await this.orderRepository
+      .createQueryBuilder('order')
+      .innerJoin(Tab, 'tab', 'tab.id::varchar = order.tab_id::varchar')
+      .innerJoin(Bill, 'bill', 'bill.tab_id::varchar = order.tab_id::varchar')
+      .where('tab.branch_id::varchar = :branchId', { branchId })
+      .andWhere('bill.paid_at IS NOT NULL')
+      .andWhere('order.created_at >= :from', { from })
+      .andWhere('order.created_at <= :to', { to })
+      .select("EXTRACT(HOUR FROM order.created_at)", "hour")
+      .addSelect("COUNT(order.id)", "order_count")
+      .addSelect("SUM(order.subtotal_kobo)", "revenue_kobo")
+      .groupBy("EXTRACT(HOUR FROM order.created_at)")
+      .orderBy('"hour"', 'ASC')
+      .getRawMany();
+
+    const hourly: Record<number, { hour: number; order_count: number; revenue_kobo: number }> = {};
+    for (let h = 0; h < 24; h++) {
+      hourly[h] = { hour: h, order_count: 0, revenue_kobo: 0 };
+    }
+
+    for (const row of rows) {
+      const h = Number(row.hour);
+      if (hourly[h]) {
+        hourly[h].order_count = Number(row.order_count);
+        hourly[h].revenue_kobo = Number(row.revenue_kobo);
+      }
+    }
+
+    return Object.values(hourly);
+  }
+
   async getTopItems(branchId: string, dateFrom?: string, dateTo?: string) {
     const from = dateFrom ? new Date(dateFrom) : new Date(new Date().setHours(0, 0, 0, 0));
     const to = dateTo ? new Date(dateTo) : new Date(new Date().setHours(23, 59, 59, 999));
