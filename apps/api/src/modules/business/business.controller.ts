@@ -1,7 +1,8 @@
 import { Controller, Get, Post, Body, Patch, Param, UseGuards, Request } from '@nestjs/common';
 import { BusinessService } from './business.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse } from '@nestjs/swagger';
+import { ApiTags, ApiBearerAuth, ApiOperation, ApiResponse, ApiBody } from '@nestjs/swagger';
+import { UpdateBusinessDto } from './dto/update-business.dto';
 
 @ApiTags('Businesses')
 @ApiBearerAuth('access-token')
@@ -20,9 +21,10 @@ export class BusinessController {
 
   @Patch('me')
   @ApiOperation({ summary: 'Update the authenticated business profile' })
+  @ApiBody({ type: UpdateBusinessDto })
   @ApiResponse({ status: 200, description: 'Business profile updated.' })
   @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  async updateMe(@Request() req: any, @Body() updateDto: any) {
+  async updateMe(@Request() req: any, @Body() updateDto: UpdateBusinessDto) {
     return this.businessService.update(req.user.businessId, updateDto);
   }
 }
