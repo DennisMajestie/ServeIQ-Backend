@@ -81,10 +81,12 @@ export class AuthService {
   }
 
   async login(dto: LoginDto) {
-    const user = await this.dataSource.getRepository(User).findOne({
-      where: { email: dto.email },
-      relations: { business: true, branch: true },
-    });
+    const user = await this.dataSource.getRepository(User)
+      .createQueryBuilder('user')
+      .leftJoinAndSelect('user.business', 'business')
+      .leftJoinAndSelect('user.branch', 'branch')
+      .where('user.email = :email', { email: dto.email })
+      .getOne();
 
     if (user && (await bcrypt.compare(dto.password, user.password_hash))) {
       return this.generateTokens(user);
