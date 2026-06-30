@@ -156,12 +156,9 @@ export class UserService {
   }
 
   async findByEmail(email: string) {
-    return this.userRepository
-      .createQueryBuilder('user')
-      .leftJoinAndSelect('user.business', 'business')
-      .leftJoinAndSelect('user.branch', 'branch')
-      .where('user.email = :email', { email })
-      .getOne();
+    return this.userRepository.findOne({
+      where: { email },
+    });
   }
 
   async update(id: string, branchId: string, updateDto: any) {
