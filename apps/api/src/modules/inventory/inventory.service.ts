@@ -23,10 +23,11 @@ export class InventoryService {
   ) {}
 
   async findAll(branchId: string) {
-    const items = await this.inventoryRepository.find({
-      where: { branch_id: branchId },
-      relations: { menu_item: true },
-    });
+    const items = await this.inventoryRepository
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.menu_item', 'menu_item')
+      .where('item.branch_id = :branchId', { branchId })
+      .getMany();
     return items.map(item => ({
       ...item,
       is_low_stock: item.quantity_in_stock <= item.reorder_level,
@@ -34,10 +35,11 @@ export class InventoryService {
   }
 
   async findOne(id: string, branchId: string) {
-    const item = await this.inventoryRepository.findOne({
-      where: { id, branch_id: branchId },
-      relations: { menu_item: true },
-    });
+    const item = await this.inventoryRepository
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.menu_item', 'menu_item')
+      .where('item.id = :id AND item.branch_id = :branchId', { id, branchId })
+      .getOne();
     if (!item) throw new NotFoundException('Inventory item not found');
     return { ...item, is_low_stock: item.quantity_in_stock <= item.reorder_level };
   }
@@ -116,10 +118,12 @@ export class InventoryService {
   }
 
   async getAlerts(branchId: string) {
-    const items = await this.inventoryRepository.find({
-      where: { branch_id: branchId, quantity_in_stock: LessThan('reorder_level' as any) },
-      relations: { menu_item: true },
-    });
+    const items = await this.inventoryRepository
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.menu_item', 'menu_item')
+      .where('item.branch_id = :branchId', { branchId })
+      .andWhere('item.quantity_in_stock <= item.reorder_level')
+      .getMany();
 
     return items
       .filter(item => item.quantity_in_stock <= item.reorder_level)
@@ -133,10 +137,11 @@ export class InventoryService {
   }
 
   async getStockVariance(branchId: string) {
-    const items = await this.inventoryRepository.find({
-      where: { branch_id: branchId },
-      relations: { menu_item: true },
-    });
+    const items = await this.inventoryRepository
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.menu_item', 'menu_item')
+      .where('item.branch_id = :branchId', { branchId })
+      .getMany();
 
     const result = [];
     for (const item of items) {
@@ -177,10 +182,11 @@ export class InventoryService {
     const to = dateTo ? new Date(dateTo) : new Date(new Date().setHours(23, 59, 59, 999));
     if (!dateFrom) from.setHours(0, 0, 0, 0);
 
-    const items = await this.inventoryRepository.find({
-      where: { branch_id: branchId },
-      relations: { menu_item: true },
-    });
+    const items = await this.inventoryRepository
+      .createQueryBuilder('item')
+      .leftJoinAndSelect('item.menu_item', 'menu_item')
+      .where('item.branch_id = :branchId', { branchId })
+      .getMany();
 
     const paidTabs = await this.tabRepository.find({
       where: { branch_id: branchId, status: 'paid', closed_at: Between(from, to) },

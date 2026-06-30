@@ -11,12 +11,11 @@ export class BusinessService {
   ) {}
 
   async findOne(id: string) {
-    const business = await this.businessRepository.findOne({
-      where: { id },
-      relations: {
-        branches: true,
-      },
-    });
+    const business = await this.businessRepository
+      .createQueryBuilder('business')
+      .leftJoinAndSelect('business.branches', 'branches')
+      .where('business.id = :id', { id })
+      .getOne();
     if (!business) {
       throw new NotFoundException('Business not found');
     }
