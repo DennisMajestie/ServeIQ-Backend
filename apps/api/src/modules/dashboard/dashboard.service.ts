@@ -138,16 +138,16 @@ export class DashboardService {
     if (!dateFrom) from.setHours(0, 0, 0, 0);
 
     const rows = await this.orderRepository
-      .createQueryBuilder('order')
-      .innerJoin(Tab, 'tab', 'tab.id::varchar = order.tab_id::varchar')
+      .createQueryBuilder('o')
+      .innerJoin(Tab, 'tab', 'tab.id::varchar = o.tab_id::varchar')
       .where('tab.branch_id::varchar = :branchId', { branchId })
       .andWhere('tab.status = :status', { status: 'paid' })
-      .andWhere('order.created_at >= :from', { from })
-      .andWhere('order.created_at <= :to', { to })
-      .select("EXTRACT(HOUR FROM order.created_at)", "hour")
-      .addSelect("COUNT(order.id)", "order_count")
-      .addSelect("SUM(order.subtotal_kobo)", "revenue_kobo")
-      .groupBy("EXTRACT(HOUR FROM order.created_at)")
+      .andWhere('o.created_at >= :from', { from })
+      .andWhere('o.created_at <= :to', { to })
+      .select("EXTRACT(HOUR FROM o.created_at)", "hour")
+      .addSelect("COUNT(o.id)", "order_count")
+      .addSelect("SUM(o.subtotal_kobo)", "revenue_kobo")
+      .groupBy("EXTRACT(HOUR FROM o.created_at)")
       .orderBy('"hour"', 'ASC')
       .getRawMany();
 
