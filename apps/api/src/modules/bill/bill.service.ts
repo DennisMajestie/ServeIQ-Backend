@@ -4,7 +4,7 @@ import { Repository, DataSource } from 'typeorm';
 import { Bill } from './entities/bill.entity';
 import { Tab } from '../tab/entities/tab.entity';
 import { Order } from '../order/entities/order.entity';
-import { Table } from '../table/entities/table.entity';
+import { Table, TableStatus } from '../table/entities/table.entity';
 import { MenuItem } from '../menu/entities/menu-item.entity';
 import { User } from '../user/entities/user.entity';
 import { Branch } from '../branch/entities/branch.entity';
@@ -91,6 +91,7 @@ export class BillService {
     if (!bill) throw new NotFoundException('Bill not found');
 
     bill.payment_method = paymentDto.method;
+    bill.payment_amount_kobo = paymentDto.amount;
     if (paymentDto.reference) {
       bill.payment_reference = paymentDto.reference;
     }
@@ -100,9 +101,13 @@ export class BillService {
     bill.paid_at = new Date();
 
     await this.billRepository.save(bill);
-    
-    // Update Tab Status
-    await this.tabRepository.update(tabId, { status: 'paid', closed_at: new Date() });
+
+    // Fetch tab to get table_id, then mark tab paid and reset table to available
+    const tab = await this.tabRepository.findOne({ where: { id: tabId } });
+    if (tab) {
+      await this.tabRepository.update(tabId, { status: 'paid', closed_at: new Date() });
+      await this.tableRepository.update(tab.table_id, { status: TableStatus.AVAILABLE });
+    }
 
     // Auto-deduct inventory stock
     try {

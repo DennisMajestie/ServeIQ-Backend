@@ -28,6 +28,9 @@ export class Bill {
   @Column({ type: 'integer' })
   total_kobo: number;
 
+  @Column({ type: 'integer', nullable: true })
+  payment_amount_kobo: number;
+
   @Column({
     type: 'enum',
     enum: ['cash', 'transfer', 'pos', 'card'],
