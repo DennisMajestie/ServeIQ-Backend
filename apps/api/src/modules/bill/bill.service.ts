@@ -94,6 +94,9 @@ export class BillService {
     if (paymentDto.reference) {
       bill.payment_reference = paymentDto.reference;
     }
+    if (paymentDto.terminal_id) {
+      bill.terminal_id = paymentDto.terminal_id;
+    }
     bill.paid_at = new Date();
 
     await this.billRepository.save(bill);

@@ -38,6 +38,9 @@ export class Bill {
   @Column({ nullable: true })
   payment_reference: string;
 
+  @Column({ type: 'uuid', nullable: true })
+  terminal_id: string;
+
   @Column({ nullable: true })
   paid_at: Date;
 

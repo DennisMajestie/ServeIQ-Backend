@@ -21,7 +21,9 @@ import { StockMovement } from './modules/inventory/entities/stock-movement.entit
 import { SupplierModule } from './modules/supplier/supplier.module';
 import { Supplier } from './modules/supplier/entities/supplier.entity';
 import { ShiftModule } from './modules/shift/shift.module';
+import { PosModule } from './modules/pos/pos.module';
 import { Shift } from './modules/shift/entities/shift.entity';
+import { PosTerminal } from './modules/pos/entities/pos-terminal.entity';
 
 import { AuthModule } from './modules/auth/auth.module';
 import { BusinessModule } from './modules/business/business.module';
@@ -63,6 +65,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
         StockMovement,
         Supplier,
         Shift,
+        PosTerminal,
       ],
       synchronize: process.env.NODE_ENV === 'development',
       logging: process.env.NODE_ENV === 'development',
@@ -86,6 +89,7 @@ import { CloudinaryModule } from './cloudinary/cloudinary.module';
     InventoryModule,
     SupplierModule,
     ShiftModule,
+    PosModule,
     AiModule,
     UploadModule,
   ],
