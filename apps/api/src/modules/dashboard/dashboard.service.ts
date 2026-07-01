@@ -140,9 +140,8 @@ export class DashboardService {
     const rows = await this.orderRepository
       .createQueryBuilder('order')
       .innerJoin(Tab, 'tab', 'tab.id::varchar = order.tab_id::varchar')
-      .innerJoin(Bill, 'bill', 'bill.tab_id::varchar = order.tab_id::varchar')
       .where('tab.branch_id::varchar = :branchId', { branchId })
-      .andWhere('bill.paid_at IS NOT NULL')
+      .andWhere('tab.status = :status', { status: 'paid' })
       .andWhere('order.created_at >= :from', { from })
       .andWhere('order.created_at <= :to', { to })
       .select("EXTRACT(HOUR FROM order.created_at)", "hour")
