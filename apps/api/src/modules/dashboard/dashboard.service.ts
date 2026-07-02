@@ -185,8 +185,8 @@ export class DashboardService {
     if (tabIds.length === 0) return [];
 
     const orders = await this.orderRepository
-      .createQueryBuilder('order')
-      .where('order.tab_id IN (:...tabIds)', { tabIds })
+      .createQueryBuilder('o')
+      .where('o.tab_id IN (:...tabIds)', { tabIds })
       .getMany();
 
     const itemMap: Record<string, { qty: number; revenue: number }> = {};

@@ -196,8 +196,8 @@ export class InventoryService {
     const orderMap: Record<string, { qty: number; revenue: number }> = {};
     if (tabIds.length > 0) {
       const orders = await this.orderRepository
-        .createQueryBuilder('order')
-        .where('order.tab_id IN (:...tabIds)', { tabIds })
+        .createQueryBuilder('o')
+        .where('o.tab_id IN (:...tabIds)', { tabIds })
         .getMany();
 
       for (const order of orders) {
